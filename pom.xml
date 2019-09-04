@@ -68,7 +68,7 @@
 
         <!-- library versions -->
         <assertj-core.version>3.12.2</assertj-core.version>
-        <blockhound.version>1.0.0.M4</blockhound.version>
+        <blockhound.version>1.0.0.RC1</blockhound.version>
         <jackson.version>2.9.9</jackson.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13-beta-3</junit.version>
