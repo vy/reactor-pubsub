@@ -119,7 +119,6 @@ publisher
                         new PubsubDraftedMessage(
                                 "Yolo like no is watching you!"
                                         .getBytes(StandardCharsets.UTF_8)))))
-        .subscribeOn(scheduler)
         .subscribe();
 ```
 
