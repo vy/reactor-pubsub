@@ -42,10 +42,26 @@ import java.util.function.Supplier;
 
 public class PubsubClient {
 
-    public static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper()
-            // To allow backward-compatible future enhancements in the
-            // protocol, disable failure on unknown properties.
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final class DefaultObjectMapperHolder {
+
+        private static final ObjectMapper INSTANCE = new ObjectMapper()
+                // To allow backward-compatible future enhancements in the
+                // protocol, disable failure on unknown properties.
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    }
+
+    public static final Supplier<ObjectMapper> DEFAULT_OBJECT_MAPPER_SUPPLIER =
+            () -> DefaultObjectMapperHolder.INSTANCE;
+
+    private static final class DefaultHttpClientHolder {
+
+        private static final HttpClient INSTANCE = HttpClient.create();
+
+    }
+
+    public static final Supplier<HttpClient> DEFAULT_HTTP_CLIENT_SUPPLIER =
+            () -> DefaultHttpClientHolder.INSTANCE;
 
     private final PubsubClientConfig config;
 
@@ -226,11 +242,11 @@ public class PubsubClient {
 
         private PubsubClientConfig config = PubsubClientConfig.DEFAULT;
 
-        private ObjectMapper objectMapper = DEFAULT_OBJECT_MAPPER;
-
-        private PubsubAccessTokenCache accessTokenCache;
+        private ObjectMapper objectMapper;
 
         private HttpClient httpClient;
+
+        private PubsubAccessTokenCache accessTokenCache;
 
         private MeterRegistry meterRegistry;
 
@@ -247,13 +263,13 @@ public class PubsubClient {
             return this;
         }
 
-        public Builder setAccessTokenCache(PubsubAccessTokenCache accessTokenCache) {
-            this.accessTokenCache = Objects.requireNonNull(accessTokenCache, "accessTokenCache");
+        public Builder setHttpClient(HttpClient httpClient) {
+            this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
             return this;
         }
 
-        public Builder setHttpClient(HttpClient httpClient) {
-            this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
+        public Builder setAccessTokenCache(PubsubAccessTokenCache accessTokenCache) {
+            this.accessTokenCache = Objects.requireNonNull(accessTokenCache, "accessTokenCache");
             return this;
         }
 
@@ -263,8 +279,13 @@ public class PubsubClient {
         }
 
         public PubsubClient build() {
+            if (objectMapper == null) {
+                objectMapper = DEFAULT_OBJECT_MAPPER_SUPPLIER.get();
+            }
+            if (httpClient == null) {
+                httpClient = DEFAULT_HTTP_CLIENT_SUPPLIER.get();
+            }
             Objects.requireNonNull(accessTokenCache, "accessTokenCache");
-            Objects.requireNonNull(httpClient, "httpClient");
             Objects.requireNonNull(meterRegistry, "meterRegistry");
             return new PubsubClient(this);
         }

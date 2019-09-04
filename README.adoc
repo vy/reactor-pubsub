@@ -69,7 +69,6 @@ basic components in place:
 - `ScheduledExecutorService` and `Scheduler` for scheduling asynchronous tasks
 - `PubsubAccessTokenCache` for authenticating HTTP requests
 - `MeterRegistry` for metrics
-- `HttpClient` for HTTP requests
 - `PubsubClient` for Pub/Sub HTTP requests
 
 ```java
@@ -89,14 +88,10 @@ PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCache
 // Create a meter registry for metrics.
 MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
-// Create the Reactor Netty HTTP client.
-HttpClient httpClient = HttpClient.create();
-
 // Create the Pub/Sub client.
 PubsubClient client = PubsubClient
         .builder()
         .setAccessTokenCache(accessTokenCache)
-        .setHttpClient(httpClient)
         .setMeterRegistry(meterRegistry)
         .build();
 ```
