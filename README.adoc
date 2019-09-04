@@ -1,0 +1,247 @@
+Finally a https://cloud.google.com/pubsub[Google Cloud Pub/Sub] Java 8 driver
+that you can wrap your head around its internals and put the fun (i.e.,
+backpressure-aware, reactive, efficient, batteries-included, and *simple*!) back
+into messaging.
+
+- It is *backpressure-aware*, because it only pulls batch of messages whenever
+  you need one and tell it to pull one. It doesn't operate a covert thread
+  (pool) to pull whenever it sees a fit and ram it through the application.
+
+- It is *reactive*, because every request is non-blocking, asynchronous, and
+  wired up with the rest of the application using
+  http://www.reactive-streams.org[Reactive Streams].
+
+- It is *efficient*, because it works in batches, the basic unit of message
+  exchange between your driver and Pub/Sub. You `pull()` some, you `ack()` some.
+  One-message-at-a-time is an illusion created by drivers and incurs a
+  significant performance penalty along with operational complexity under the
+  hood.
+
+- It is *batteries-included*, because it provides goodies (out of the box
+  metrics integration, an adaptive rate limiter to help you avoid burning money
+  by continuously pulling and nack'ing messages when something is wrong with
+  your consumer, a `ScheduledExecutorService` implementation with a bounded task
+  queue to mitigate backpressure violating consumption) that assist real-world
+  production deployments.
+
+- It is *simple*, because there are 2 dozens of classes where half is used to
+  represent JSON models transmitted over the wire and the rest is just reactive
+  streams gluing. There are no smart retry mechanisms (though thanks to reactive
+  streams, you can introduce yours), there are no message lease time extending
+  background tasks (hence, you better consume your batch before it times out),
+  etc. Spend a minute on the source code and you are ready to write your own
+  Pub/Sub driver!
+
+Due to the constraints on the development resources (read as, _"it is just
+me"_), I needed to take some shortcuts to get this project going:
+
+- https://github.com/reactor/reactor-core/[Reactor Core] for Reactive Streams
+
+- https://github.com/reactor/reactor-netty[Reactor Netty] for HTTP requests
+
+- https://github.com/googleapis/google-api-java-client[Google APIs Client
+  Library]footnote:[This could have been replaced with a more lightweight
+  alternative, but given you have already been using Pub/Sub, it is highly
+  likely that you already sold your soul to some other Google Cloud services
+  too. Hence, no need to introduce an extra dependency.] for authentication
+
+- https://github.com/FasterXML/jackson-databind[Jackson]footnote:[https://github.com/googleapis/google-api-java-client[Google
+  APIs Client Library] already depends on this library.] for JSON serialization
+
+- http://micrometer.io/[Micrometer] for metrics
+
+== Getting Started
+
+You first need to add the `reactor-pubsub` artifact into your list of
+dependencies:
+
+```xml
+<dependency>
+    <groupId>com.vlkan</groupId>
+    <artifactId>reactor-pubsub</artifactId>
+    <version>${reactor-pubsub.version}</version>
+</dependency>
+```
+
+In order to instantiate a publisher and/or subscriber, you need to have certain
+basic components in place:
+
+- `ScheduledExecutorService` and `Scheduler` for scheduling asynchronous tasks
+- `PubsubAccessTokenCache` for authenticating HTTP requests
+- `MeterRegistry` for metrics
+- `HttpClient` for HTTP requests
+- `PubsubClient` for Pub/Sub HTTP requests
+
+```java
+// Create the executor that Reactor will subscribe on.
+BoundedScheduledThreadPoolExecutor executorService =
+        new BoundedScheduledThreadPoolExecutor(
+                100, new ScheduledThreadPoolExecutor(8));
+Scheduler scheduler = Schedulers.fromExecutorService(executorService);
+
+// Create the Pub/Sub access token cache.
+PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCache
+        .builder()
+        .setExecutorService(executorService)
+        .setCredentials("awesome-credentials")
+        .build();
+
+// Create a meter registry for metrics.
+MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+// Create the Reactor Netty HTTP client.
+HttpClient httpClient = HttpClient.create();
+
+// Create the Pub/Sub client.
+PubsubClient client = PubsubClient
+        .builder()
+        .setAccessTokenCache(accessTokenCache)
+        .setHttpClient(httpClient)
+        .setMeterRegistry(meterRegistry)
+        .build();
+```
+
+You can create a publisher and publish a message as follows:
+
+```java
+// Create the publisher.
+String projectName = "awesome-project";
+PubsubPublisherConfig publisherConfig = PubsubPublisherConfig
+        .builder()
+        .setProjectName(projectName)
+        .setTopicName("awesome-topic")
+        .build();
+PubsubPublisher publisher = PubsubPublisher
+        .builder()
+        .setClient(client)
+        .setConfig(publisherConfig)
+        .build();
+
+// Publish a message.
+publisher
+        .publish(new PubsubPublishRequest(
+                Collections.singletonList(
+                        new PubsubDraftedMessage(
+                                "Yolo like no is watching you!"
+                                        .getBytes(StandardCharsets.UTF_8)))))
+        .subscribeOn(scheduler)
+        .subscribe();
+```
+
+You can create a subscriber and start receiving messages from a subscription as
+follows:
+
+```java
+// Create the message consumer.
+PubsubSubscriber.PullResponseConsumer pullResponseConsumer =
+        pullResponse -> {
+            int messageCount = pullResponse.getReceivedAckableMessages().size();
+            System.out.format("Just got awesome %d messages!%n", messageCount);
+            List<String> ackIds = pullResponse
+                    .getReceivedAckableMessages()
+                    .stream()
+                    .map(PubsubReceivedAckableMessage::getAckId)
+                    .collect(Collectors.toList());
+            PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
+            return Mono.just(ackRequest);
+        };
+
+// Create a subscriber.
+PubsubSubscriberConfig subscriberConfig = PubsubSubscriberConfig
+        .builder()
+        .setProjectName(projectName)
+        .setSubscriptionName("awesome-subscription")
+        .build();
+PubsubSubscriber subscriber = PubsubSubscriber
+        .builder()
+        .setClient(client)
+        .setConfig(subscriberConfig)
+        .setPullResponseConsumer(pullResponseConsumer)
+        .setMeterRegistry(meterRegistry)
+        .setScheduler(scheduler)
+        .build();
+
+// Start the subscriber.
+subscriber
+        .start()
+        .subscribe(consumption -> {
+            int pulledMessageCount = consumption
+                    .getPullResponse()
+                    .getReceivedAckableMessages()
+                    .size();
+            int ackedMessageCount = consumption
+                    .getAckRequest()
+                    .getAckIds()
+                    .size();
+            System.out.format(
+                    "Pulled %d, acked %d!%n",
+                    pulledMessageCount, ackedMessageCount);
+        });
+```
+
+== Design Rationale
+
+*Why did I feel a need to implement a Pub/Sub Java driver from scratch?* At
+https://bol.com[bol.com], we heavily use Pub/Sub. There we started our pursuit
+like the rest of the Pub/Sub users with
+https://cloud.google.com/pubsub/docs/quickstart-client-libraries[the official
+Java drivers] provided by Google. Later on we started bumping into backpressure
+problems: tasks on the shared `ScheduledExecutorService` were somehow awkwardly
+dating back and constantly piling up. That was the point I introduced a
+link:src/main/java/com/vlkan/pubsub/util/BoundedScheduledThreadPoolExecutor.java[BoundedScheduledThreadPoolExecutor]
+and shit hit the fan. I figured the official Pub/Sub driver was ramming the
+fetched batch of messages through the shared executor. My first reaction was to
+cut down the pull buffer size and the concurrent pull count. That solved a
+majority of our backpressure-related problems, though created a new one:
+efficiency. Then I started examining the source code and wasted quite a lot of
+time trying to make forsaken
+https://github.com/googleapis/gax-java/blob/master/gax/src/main/java/com/google/api/gax/batching/FlowControlSettings.java[FlowControlSettings]
+work. This disappointing inquiry resulted in something remarkable: I understood
+how Pub/Sub works and amazed by the extent of complexity for a such simple task.
+I have already been using Reactive Streams (RxJava and Reactor) every single
+work day in the last five years and compiled a thick collection of lessons and
+recipes out of it. The more I examined the official Pub/Sub Java driver source
+code, the more I was convinced that I could very well engineer this into
+something way more simple. I know how to pump JSON payloads over HTTP via
+Reactor Netty and enjoy a backpressure-aware, reactive comfort out of the box.
+But that wasn't the tipping point I had decided to implement my own Pub/Sub Java
+driver. I made my mind when I witnessed that
+https://github.com/spring-cloud/spring-cloud-gcp/pull/1461#discussion_r274098603[Google
+engineers are clueless about these problems].
+
+*Why are there no support for retries in the publisher out of the box?* Because
+you can simply get it via Reactor. Search for "retry" in
+https://projectreactor.io/docs/core/release/reference/#faq.exponentialBackoff[the
+Reactor documentation].
+
+*Why do you require a rate limiter in the subscriber?* One morning I came to the
+office and read an e-mail from one of the platform teams asking how come we
+managed to burn hundreds of dollars worth of Pub/Sub messaging in the middle of
+the night. One of the application (non-critical) databases happened to go down
+for a couple of hours and during that period nodes constantly sucked up messages
+and nack'ed them due to the database failure. This is an opinionated Pub/Sub
+driver and in my opinion you should not relentlessly burn Pub/Sub bills if the
+rest of the application is shouting out there is something going on wrong.
+Hence, please configure and use the god damn rate limiter. Yes, you can disable
+it by providing infinite limits, but I am not gonna serve to evil here.
+
+== Contributors
+
+- https://github.com/berkaybuharali[Berkay Buharalı]
+
+== License
+
+Copyright &copy; 2019 https://vlkan.com/[Volkan Yazıcı]
+
+Licensed under the Apache License, Version 2.0 (the "License");  you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+```
+http://www.apache.org/licenses/LICENSE-2.0
+```
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
