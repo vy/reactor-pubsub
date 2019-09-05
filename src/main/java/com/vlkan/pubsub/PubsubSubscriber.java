@@ -160,15 +160,15 @@ public class PubsubSubscriber {
 
     private <V> Mono<V> rateLimit(Mono<V> mono) {
         return mono
-                .flatMap(value -> {
+                .delayUntil(value -> {
                     long permitWaitPeriodNanos = rateLimiter.nextPermitWaitPeriodNanos();
                     permitWaitPeriodDistributions.record(permitWaitPeriodNanos);
                     if (permitWaitPeriodNanos > 0L) {
                         return scheduler == null
-                                ? Mono.just(value).delayElement(Duration.ofNanos(permitWaitPeriodNanos))
-                                : Mono.just(value).delayElement(Duration.ofNanos(permitWaitPeriodNanos), scheduler);
+                                ? Mono.delay(Duration.ofNanos(permitWaitPeriodNanos))
+                                : Mono.delay(Duration.ofNanos(permitWaitPeriodNanos), scheduler);
                     } else {
-                        return Mono.just(value);
+                        return Mono.empty();
                     }
                 })
                 .doOnError(ignored -> rateLimiter.acknowledgeFailure());
