@@ -71,24 +71,46 @@ public class PubsubClient {
 
     private final HttpClient httpClient;
 
+    @Nullable
     private final MeterRegistry meterRegistry;
 
-    private final Map<String, Timer> timerByRequestUrl = new WeakHashMap<>();
+    @Nullable
+    private final Map<String, Timer> timerByRequestUrl;
 
-    private final Map<String, Counter> counterByRequestUrl = new WeakHashMap<>();
+    @Nullable
+    private final Map<String, Counter> counterByRequestUrl;
 
     private PubsubClient(Builder builder) {
         this.config = builder.config;
         this.objectMapper = builder.objectMapper;
         this.accessTokenCache = builder.accessTokenCache;
         this.httpClient = builder.httpClient;
-        this.meterRegistry = builder.meterRegistry;
+        if (builder.meterRegistry == null) {
+            this.meterRegistry = null;
+            this.timerByRequestUrl = null;
+            this.counterByRequestUrl = null;
+        } else {
+            this.meterRegistry = builder.meterRegistry;
+            this.timerByRequestUrl = new WeakHashMap<>();
+            this.counterByRequestUrl = new WeakHashMap<>();
+        }
     }
 
     Mono<PubsubPullResponse> pull(String projectName, String subscriptionName, PubsubPullRequest pullRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/subscriptions/%s:pull",
                 config.getBaseUrl(), projectName, subscriptionName);
+        Mono<PubsubPullResponse> pullResponseMono = meterRegistry == null
+                ? executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
+                : pullMeasured(projectName, subscriptionName, pullRequest, requestUrl);
+        return pullResponseMono.checkpoint(requestUrl);
+    }
+
+    private Mono<PubsubPullResponse> pullMeasured(
+            String projectName,
+            String subscriptionName,
+            PubsubPullRequest pullRequest,
+            String requestUrl) {
         Supplier<String[]> tagSupplier = () -> new String[]{
                 "operation", "pull",
                 "projectName", projectName,
@@ -107,44 +129,60 @@ public class PubsubClient {
                         requestUrl,
                         tagSupplier,
                         pullResponse -> pullResponse.getReceivedAckableMessages().size(),
-                        mono))
-                .checkpoint(requestUrl);
+                        mono));
     }
 
     Mono<Void> ack(String projectName, String subscriptionName, PubsubAckRequest ackRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/subscriptions/%s:acknowledge",
                 config.getBaseUrl(), projectName, subscriptionName);
+        Mono<Void> ackResponseMono = meterRegistry == null
+                ? executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
+                : ackMeasured(projectName, subscriptionName, ackRequest, requestUrl);
+        return ackResponseMono.checkpoint(requestUrl);
+    }
+
+    private Mono<Void> ackMeasured(
+            String projectName,
+            String subscriptionName,
+            PubsubAckRequest ackRequest,
+            String requestUrl) {
+        Supplier<String[]> tagSupplier = () -> new String[]{
+                "operation", "publish",
+                "projectName", projectName,
+                "subscriptionName", subscriptionName
+        };
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
                         timerByRequestUrl,
                         requestUrl,
-                        () -> new String[]{
-                                "operation", "publish",
-                                "projectName", projectName,
-                                "subscriptionName", subscriptionName
-                        },
+                        tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
                         counterByRequestUrl,
                         requestUrl,
-                        () -> new String[]{
-                                "operation", "publish",
-                                "projectName", projectName,
-                                "subscriptionName", subscriptionName
-                        },
+                        tagSupplier,
                         ignored -> ackRequest.getAckIds().size(),
-                        mono))
-                .checkpoint(requestUrl)
-                .then();
+                        mono));
     }
 
     Mono<PubsubPublishResponse> publish(String projectName, String topicName, PubsubPublishRequest publishRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/topics/%s:publish",
                 config.getBaseUrl(), projectName, topicName);
+        Mono<PubsubPublishResponse> publishResponseMono = meterRegistry == null
+                ? executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
+                : publishMeasured(projectName, topicName, publishRequest, requestUrl);
+        return publishResponseMono.checkpoint(requestUrl);
+    }
+
+    private Mono<PubsubPublishResponse> publishMeasured(
+            String projectName,
+            String topicName,
+            PubsubPublishRequest publishRequest,
+            String requestUrl) {
         Supplier<String[]> tagSupplier = () -> new String[]{
                 "operation", "publish",
                 "projectName", projectName,
@@ -163,8 +201,7 @@ public class PubsubClient {
                         requestUrl,
                         tagSupplier,
                         ignored -> publishRequest.getMessages().size(),
-                        mono))
-                .checkpoint(requestUrl);
+                        mono));
     }
 
     private <T> Mono<T> executeRequest(String requestUrl, Object requestPayload, Class<T> responseClass, Duration timeout) {
@@ -248,6 +285,7 @@ public class PubsubClient {
 
         private PubsubAccessTokenCache accessTokenCache;
 
+        @Nullable
         private MeterRegistry meterRegistry;
 
         private Builder() {}
@@ -286,7 +324,6 @@ public class PubsubClient {
                 httpClient = DEFAULT_HTTP_CLIENT_SUPPLIER.get();
             }
             Objects.requireNonNull(accessTokenCache, "accessTokenCache");
-            Objects.requireNonNull(meterRegistry, "meterRegistry");
             return new PubsubClient(this);
         }
 
