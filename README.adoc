@@ -66,36 +66,20 @@ dependencies:
 In order to instantiate a publisher and/or subscriber, you need to have certain
 basic components in place:
 
-- `ScheduledExecutorService` for scheduling access token refreshes
-- `Scheduler` for scheduling delays in `PubsubSubscriber` _(optional)_
 - `PubsubAccessTokenCache` for authenticating HTTP requests
-- `MeterRegistry` for metrics _(optional)_
 - `PubsubClient` for Pub/Sub HTTP requests
 
 ```java
-// Create an executor for scheduling access token refreshes.
-BoundedScheduledThreadPoolExecutor executorService =
-        new BoundedScheduledThreadPoolExecutor(
-                100, new ScheduledThreadPoolExecutor(8));
-
-// Create a scheduler for delays in the subscriber. (optional)
-Scheduler scheduler = Schedulers.fromExecutorService(executorService);
-
 // Create the Pub/Sub access token cache.
 PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCache
         .builder()
-        .setExecutorService(executorService)
         .setCredentials("awesome-credentials")
         .build();
-
-// Create a meter registry for client metrics. (optional)
-MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
 // Create the Pub/Sub client.
 PubsubClient client = PubsubClient
         .builder()
         .setAccessTokenCache(accessTokenCache)
-        .setMeterRegistry(meterRegistry)    // optional
         .build();
 ```
 
@@ -155,7 +139,6 @@ PubsubSubscriber subscriber = PubsubSubscriber
         .setConfig(subscriberConfig)
         .setPullResponseConsumer(pullResponseConsumer)
         .setMeterRegistry(meterRegistry)
-        .setScheduler(scheduler)    // optional
         .build();
 
 // Start the subscriber.

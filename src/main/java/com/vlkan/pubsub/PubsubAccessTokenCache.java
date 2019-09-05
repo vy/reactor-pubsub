@@ -18,6 +18,7 @@ package com.vlkan.pubsub;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.vlkan.pubsub.util.BoundedScheduledThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +29,37 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 public class PubsubAccessTokenCache {
+
+    private static final class DefaultExecutorServiceHolder {
+
+        private static final ScheduledExecutorService INSTANCE =
+                new BoundedScheduledThreadPoolExecutor(
+                        100,
+                        new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+
+                            private final AtomicInteger threadCounter = new AtomicInteger(0);
+
+                            @Override
+                            public Thread newThread(Runnable runnable) {
+                                String name = String.format(
+                                        "PubsubAccessTokenCacheWorker-%02d",
+                                        threadCounter.incrementAndGet());
+                                return new Thread(runnable, name);
+                            }
+
+                        }));
+
+    }
+
+    public static final Supplier<ScheduledExecutorService> DEFAULT_EXECUTOR_SERVICE_SUPPLIER =
+            () -> DefaultExecutorServiceHolder.INSTANCE;
 
     public static final Duration DEFAULT_ACCESS_TOKEN_REFRESH_PERIOD = Duration.ofMinutes(1);
 
@@ -126,7 +155,9 @@ public class PubsubAccessTokenCache {
         }
 
         public PubsubAccessTokenCache build() {
-            Objects.requireNonNull(executorService, "executorService");
+            if (executorService == null) {
+                executorService = DEFAULT_EXECUTOR_SERVICE_SUPPLIER.get();
+            }
             Objects.requireNonNull(accessTokenRefreshPeriod, "accessTokenRefreshPeriod");
             return new PubsubAccessTokenCache(this);
         }
