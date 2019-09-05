@@ -113,9 +113,35 @@ You can create a subscriber and start receiving messages from a subscription as
 follows:
 
 ```java
-// Create the message consumer.
-PubsubSubscriber.PullResponseConsumer pullResponseConsumer =
-        pullResponse -> {
+// Create a puller.
+String subscriptionName = "awesome-subscription";
+PubsubPullerConfig pullerConfig = PubsubPullerConfig
+        .builder()
+        .setProjectName(projectName)
+        .setSubscriptionName(subscriptionName)
+        .build();
+PubsubPuller puller = PubsubPuller
+        .builder()
+        .setClient(client)
+        .setConfig(pullerConfig)
+        .build();
+
+// Create an acker.
+PubsubAckerConfig ackerConfig = PubsubAckerConfig
+        .builder()
+        .setProjectName(projectName)
+        .setSubscriptionName(subscriptionName)
+        .build();
+PubsubAcker acker = PubsubAcker
+        .builder()
+        .setClient(client)
+        .setConfig(ackerConfig)
+        .build();
+
+// Pull and consume continuously.
+puller
+        .pullAll()
+        .flatMap(pullResponse -> {
             int messageCount = pullResponse.getReceivedAckableMessages().size();
             System.out.format("Just got awesome %d messages!%n", messageCount);
             List<String> ackIds = pullResponse
@@ -124,39 +150,9 @@ PubsubSubscriber.PullResponseConsumer pullResponseConsumer =
                     .map(PubsubReceivedAckableMessage::getAckId)
                     .collect(Collectors.toList());
             PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
-            return Mono.just(ackRequest);
-        };
-
-// Create a subscriber.
-PubsubSubscriberConfig subscriberConfig = PubsubSubscriberConfig
-        .builder()
-        .setProjectName(projectName)
-        .setSubscriptionName("awesome-subscription")
-        .build();
-PubsubSubscriber subscriber = PubsubSubscriber
-        .builder()
-        .setClient(client)
-        .setConfig(subscriberConfig)
-        .setPullResponseConsumer(pullResponseConsumer)
-        .setMeterRegistry(meterRegistry)
-        .build();
-
-// Start the subscriber.
-subscriber
-        .start()
-        .subscribe(consumption -> {
-            int pulledMessageCount = consumption
-                    .getPullResponse()
-                    .getReceivedAckableMessages()
-                    .size();
-            int ackedMessageCount = consumption
-                    .getAckRequest()
-                    .getAckIds()
-                    .size();
-            System.out.format(
-                    "Pulled %d, acked %d!%n",
-                    pulledMessageCount, ackedMessageCount);
-        });
+            return acker.ack(ackRequest);
+        })
+        .subscribe();
 ```
 
 == Design Rationale

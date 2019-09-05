@@ -16,24 +16,23 @@
 
 package com.vlkan.pubsub;
 
-import com.vlkan.pubsub.model.PubsubPublishRequest;
-import com.vlkan.pubsub.model.PubsubPublishResponse;
+import com.vlkan.pubsub.model.PubsubAckRequest;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-public class PubsubPublisher {
+public class PubsubAcker {
 
-    private final PubsubPublisherConfig config;
+    private final PubsubAckerConfig config;
 
     private final PubsubClient client;
 
-    private PubsubPublisher(Builder builder) {
+    private PubsubAcker(Builder builder) {
         this.config = builder.config;
         this.client = builder.client;
     }
 
-    public PubsubPublisherConfig getConfig() {
+    public PubsubAckerConfig getConfig() {
         return config;
     }
 
@@ -41,9 +40,9 @@ public class PubsubPublisher {
         return client;
     }
 
-    public Mono<PubsubPublishResponse> publish(PubsubPublishRequest publishRequest) {
-        Objects.requireNonNull(publishRequest, "publishRequest");
-        return client.publish(config.getProjectName(), config.getTopicName(), publishRequest);
+    public Mono<Void> ack(PubsubAckRequest ackRequest) {
+        Objects.requireNonNull(ackRequest, "ackRequest");
+        return client.ack(config.getProjectName(), config.getSubscriptionName(), ackRequest);
     }
 
     public static Builder builder() {
@@ -52,13 +51,13 @@ public class PubsubPublisher {
 
     public static final class Builder {
 
-        private PubsubPublisherConfig config;
+        private PubsubAckerConfig config;
 
         private PubsubClient client;
 
         private Builder() {}
 
-        public Builder setConfig(PubsubPublisherConfig config) {
+        public Builder setConfig(PubsubAckerConfig config) {
             this.config = Objects.requireNonNull(config, "config");
             return this;
         }
@@ -68,10 +67,10 @@ public class PubsubPublisher {
             return this;
         }
 
-        public PubsubPublisher build() {
+        public PubsubAcker build() {
             Objects.requireNonNull(config, "config");
             Objects.requireNonNull(client, "client");
-            return new PubsubPublisher(this);
+            return new PubsubAcker(this);
         }
 
     }

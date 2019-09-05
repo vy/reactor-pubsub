@@ -19,7 +19,7 @@ package com.vlkan.pubsub;
 import java.time.Duration;
 import java.util.Objects;
 
-public class PubsubSubscriberConfig {
+public class PubsubPullerConfig {
 
     public static final int DEFAULT_PULL_CONCURRENCY = 4;
 
@@ -27,30 +27,20 @@ public class PubsubSubscriberConfig {
 
     public static final Duration DEFAULT_PULL_PERIOD = Duration.ofSeconds(30);
 
-    public static final String DEFAULT_RATE_LIMITER_SPEC = "1/1m:, 1/30s:1/1m, 1/1s:2/1m, :1/3m";
+    private final int pullConcurrency;
 
-    public static final String DEFAULT_METER_NAME = "pubsub.subscriber";
+    private final int pullBufferSize;
 
-    private int pullConcurrency;
+    private final Duration pullPeriod;
 
-    private int pullBufferSize;
+    private final String projectName;
 
-    private Duration pullPeriod;
+    private final String subscriptionName;
 
-    private String rateLimiterSpec;
-
-    private String meterName;
-
-    private String projectName;
-
-    private String subscriptionName;
-
-    private PubsubSubscriberConfig(Builder builder) {
+    private PubsubPullerConfig(Builder builder) {
         this.pullConcurrency = builder.pullConcurrency;
         this.pullBufferSize = builder.pullBufferSize;
         this.pullPeriod = builder.pullPeriod;
-        this.rateLimiterSpec = builder.rateLimiterSpec;
-        this.meterName = builder.meterName;
         this.projectName = builder.projectName;
         this.subscriptionName = builder.projectName;
     }
@@ -67,20 +57,42 @@ public class PubsubSubscriberConfig {
         return pullPeriod;
     }
 
-    public String getRateLimiterSpec() {
-        return rateLimiterSpec;
-    }
-
-    public String getMeterName() {
-        return meterName;
-    }
-
     public String getProjectName() {
         return projectName;
     }
 
     public String getSubscriptionName() {
         return subscriptionName;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        PubsubPullerConfig that = (PubsubPullerConfig) object;
+        return pullConcurrency == that.pullConcurrency &&
+                pullBufferSize == that.pullBufferSize &&
+                pullPeriod.equals(that.pullPeriod) &&
+                projectName.equals(that.projectName) &&
+                subscriptionName.equals(that.subscriptionName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                pullConcurrency,
+                pullBufferSize,
+                pullPeriod,
+                projectName,
+                subscriptionName);
+    }
+
+    @Override
+    public String toString() {
+        return "PubsubPullerConfig{" +
+                "projectName='" + projectName + '\'' +
+                ", subscriptionName='" + subscriptionName + '\'' +
+                '}';
     }
 
     public static Builder builder() {
@@ -94,10 +106,6 @@ public class PubsubSubscriberConfig {
         private int pullBufferSize = DEFAULT_PULL_BUFFER_SIZE;
 
         private Duration pullPeriod = DEFAULT_PULL_PERIOD;
-
-        private String rateLimiterSpec = DEFAULT_RATE_LIMITER_SPEC;
-
-        private String meterName = DEFAULT_METER_NAME;
 
         private String projectName;
 
@@ -128,16 +136,6 @@ public class PubsubSubscriberConfig {
             return this;
         }
 
-        public Builder setRateLimiterSpec(String rateLimiterSpec) {
-            this.rateLimiterSpec = Objects.requireNonNull(rateLimiterSpec, "rateLimiterSpec");
-            return this;
-        }
-
-        public Builder setMeterName(String meterName) {
-            this.meterName = Objects.requireNonNull(meterName, "meterName");
-            return this;
-        }
-
         public Builder setProjectName(String projectName) {
             this.projectName = Objects.requireNonNull(projectName, "projectName");
             return this;
@@ -148,46 +146,12 @@ public class PubsubSubscriberConfig {
             return this;
         }
 
-        public PubsubSubscriberConfig build() {
+        public PubsubPullerConfig build() {
             Objects.requireNonNull(projectName, "projectName");
             Objects.requireNonNull(subscriptionName, "subscriptionName");
-            return new PubsubSubscriberConfig(this);
+            return new PubsubPullerConfig(this);
         }
 
-    }
-
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        PubsubSubscriberConfig that = (PubsubSubscriberConfig) object;
-        return pullConcurrency == that.pullConcurrency &&
-                pullBufferSize == that.pullBufferSize &&
-                pullPeriod.equals(that.pullPeriod) &&
-                rateLimiterSpec.equals(that.rateLimiterSpec) &&
-                meterName.equals(that.meterName) &&
-                projectName.equals(that.projectName) &&
-                subscriptionName.equals(that.subscriptionName);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(
-                pullConcurrency,
-                pullBufferSize,
-                pullPeriod,
-                rateLimiterSpec,
-                meterName,
-                projectName,
-                subscriptionName);
-    }
-
-    @Override
-    public String toString() {
-        return "PubsubSubscriberConfig{" +
-                "projectName='" + projectName + '\'' +
-                ", subscriptionName='" + subscriptionName + '\'' +
-                '}';
     }
 
 }
