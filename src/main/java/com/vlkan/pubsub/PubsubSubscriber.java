@@ -19,7 +19,6 @@ package com.vlkan.pubsub;
 import com.vlkan.pubsub.model.PubsubAckRequest;
 import com.vlkan.pubsub.model.PubsubPullRequest;
 import com.vlkan.pubsub.model.PubsubPullResponse;
-import com.vlkan.pubsub.model.PubsubReceivedAckableMessage;
 import com.vlkan.pubsub.ratelimiter.StagedRateLimiter;
 import com.vlkan.pubsub.util.FluxHelpers;
 import io.micrometer.core.instrument.DistributionSummary;
@@ -33,7 +32,6 @@ import reactor.core.scheduler.Scheduler;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -143,9 +141,8 @@ public class PubsubSubscriber {
                 .defer(() -> {
 
                     // Discard empty batches.
-                    List<PubsubReceivedAckableMessage> receivedAckableMessages = pullResponse.getReceivedAckableMessages();
-                    int receivedAckableMessageCount = receivedAckableMessages.size();
-                    if (receivedAckableMessageCount < 1) {
+                    boolean emptyResponse = pullResponse.getReceivedAckableMessages().isEmpty();
+                    if (emptyResponse) {
                         return Mono.empty();
                     }
 
