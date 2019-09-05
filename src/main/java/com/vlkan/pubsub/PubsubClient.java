@@ -32,7 +32,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -244,9 +243,8 @@ public class PubsubClient {
 
     private ByteBuf serializeRequestPayload(Object requestPayload) {
         try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            objectMapper.writeValue(outputStream, requestPayload);
-            return Unpooled.copiedBuffer(outputStream.toByteArray());
+            byte[] requestPayloadJsonBytes = objectMapper.writeValueAsBytes(requestPayload);
+            return Unpooled.copiedBuffer(requestPayloadJsonBytes);
         } catch (IOException error) {
             @Nullable String requestPayloadClassName = requestPayload != null
                     ? requestPayload.getClass().getCanonicalName()
