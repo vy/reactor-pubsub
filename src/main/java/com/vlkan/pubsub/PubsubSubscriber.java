@@ -30,6 +30,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.List;
@@ -44,6 +45,7 @@ public class PubsubSubscriber {
 
     private final PubsubClient client;
 
+    @Nullable
     private final Scheduler scheduler;
 
     private final PullResponseConsumer pullResponseConsumer;
@@ -91,20 +93,26 @@ public class PubsubSubscriber {
     }
 
     public Flux<PubsubSubscriberConsumption> start() {
-        return Flux
+        Flux<PubsubSubscriberConsumption> flux = Flux
                 .just(new AtomicBoolean(false))
                 .flatMap(emptyBatchReceivedRef -> FluxHelpers
                         .infiniteRange(BigDecimal.ZERO)
                         .concatMap(requestIndex -> {
                             boolean delayEnabled = emptyBatchReceivedRef.get();
-                            return delayEnabled
-                                    ? Mono.just(requestIndex).delayElement(config.getPullPeriod(), scheduler)
-                                    : Mono.just(requestIndex);
+                            if (delayEnabled) {
+                                return scheduler == null
+                                        ? Mono.just(requestIndex).delayElement(config.getPullPeriod())
+                                        : Mono.just(requestIndex).delayElement(config.getPullPeriod(), scheduler);
+                            } else {
+                                return Mono.just(requestIndex);
+                            }
                         })
                         .flatMap(
                                 requestIndex -> pullAndConsumeAndAck(emptyBatchReceivedRef, requestIndex),
-                                config.getPullConcurrency()))
-                .subscribeOn(scheduler);
+                                config.getPullConcurrency()));
+        return scheduler == null
+                ? flux
+                : flux.subscribeOn(scheduler);
     }
 
     private Mono<PubsubSubscriberConsumption> pullAndConsumeAndAck(
@@ -158,9 +166,13 @@ public class PubsubSubscriber {
                 .flatMap(value -> {
                     long permitWaitPeriodNanos = rateLimiter.nextPermitWaitPeriodNanos();
                     permitWaitPeriodDistributions.record(permitWaitPeriodNanos);
-                    return permitWaitPeriodNanos > 0L
-                            ? Mono.just(value).delayElement(Duration.ofNanos(permitWaitPeriodNanos), scheduler)
-                            : Mono.just(value);
+                    if (permitWaitPeriodNanos > 0L) {
+                        return scheduler == null
+                                ? Mono.just(value).delayElement(Duration.ofNanos(permitWaitPeriodNanos))
+                                : Mono.just(value).delayElement(Duration.ofNanos(permitWaitPeriodNanos), scheduler);
+                    } else {
+                        return Mono.just(value);
+                    }
                 })
                 .doOnError(ignored -> rateLimiter.acknowledgeFailure());
     }
@@ -175,6 +187,7 @@ public class PubsubSubscriber {
 
         private PubsubClient client;
 
+        @Nullable
         private Scheduler scheduler;
 
         private PullResponseConsumer pullResponseConsumer;
@@ -211,7 +224,6 @@ public class PubsubSubscriber {
         public PubsubSubscriber build() {
             Objects.requireNonNull(config, "config");
             Objects.requireNonNull(client, "client");
-            Objects.requireNonNull(scheduler, "scheduler");
             Objects.requireNonNull(pullResponseConsumer, "pullResponseConsumer");
             Objects.requireNonNull(meterRegistry, "meterRegistry");
             return new PubsubSubscriber(this);
