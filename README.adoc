@@ -341,6 +341,7 @@ configure and use the god damn rate limiter.
 == Contributors
 
 - https://github.com/berkaybuharali[Berkay Buharalı]
+- https://github.com/bsideup[Sergei Egorov]
 
 == License
 
