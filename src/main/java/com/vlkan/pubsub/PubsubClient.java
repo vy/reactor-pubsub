@@ -62,6 +62,15 @@ public class PubsubClient {
     public static final Supplier<HttpClient> DEFAULT_HTTP_CLIENT_SUPPLIER =
             () -> DefaultHttpClientHolder.INSTANCE;
 
+    private static final class DefaultClientHolder {
+
+        private static final PubsubClient INSTANCE = PubsubClient.builder().build();
+
+    }
+
+    public static final Supplier<PubsubClient> DEFAULT_CLIENT_SUPPLIER = () ->
+            DefaultClientHolder.INSTANCE;
+
     private final PubsubClientConfig config;
 
     private final ObjectMapper objectMapper;
@@ -321,7 +330,9 @@ public class PubsubClient {
             if (httpClient == null) {
                 httpClient = DEFAULT_HTTP_CLIENT_SUPPLIER.get();
             }
-            Objects.requireNonNull(accessTokenCache, "accessTokenCache");
+            if (accessTokenCache == null) {
+                accessTokenCache = PubsubAccessTokenCache.DEFAULT_ACCESS_TOKEN_CACHE_SUPPLIER.get();
+            }
             return new PubsubClient(this);
         }
 

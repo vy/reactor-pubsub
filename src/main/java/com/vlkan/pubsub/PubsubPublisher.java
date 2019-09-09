@@ -70,7 +70,9 @@ public class PubsubPublisher {
 
         public PubsubPublisher build() {
             Objects.requireNonNull(config, "config");
-            Objects.requireNonNull(client, "client");
+            if (client == null) {
+                client = PubsubClient.DEFAULT_CLIENT_SUPPLIER.get();
+            }
             return new PubsubPublisher(this);
         }
 

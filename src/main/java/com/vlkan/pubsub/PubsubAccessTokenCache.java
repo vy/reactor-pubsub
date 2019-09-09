@@ -63,6 +63,16 @@ public class PubsubAccessTokenCache {
 
     public static final Duration DEFAULT_ACCESS_TOKEN_REFRESH_PERIOD = Duration.ofMinutes(1);
 
+    private static final class DefaultAccessTokenCacheHolder {
+
+        private static final PubsubAccessTokenCache INSTANCE =
+                PubsubAccessTokenCache.builder().build();
+
+    }
+
+    public static final Supplier<PubsubAccessTokenCache> DEFAULT_ACCESS_TOKEN_CACHE_SUPPLIER =
+            () -> DefaultAccessTokenCacheHolder.INSTANCE;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PubsubAccessTokenCache.class);
 
     private static final String CLOUD_PLATFORM_URI = "https://www.googleapis.com/auth/cloud-platform";

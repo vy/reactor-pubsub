@@ -69,7 +69,9 @@ public class PubsubAcker {
 
         public PubsubAcker build() {
             Objects.requireNonNull(config, "config");
-            Objects.requireNonNull(client, "client");
+            if (client == null) {
+                client = PubsubClient.DEFAULT_CLIENT_SUPPLIER.get();
+            }
             return new PubsubAcker(this);
         }
 
