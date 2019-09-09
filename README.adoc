@@ -50,7 +50,7 @@ me"_), I needed to take some shortcuts to get this project going:
 
 - http://micrometer.io/[Micrometer] for metrics
 
-== Getting Started
+== Getting started
 
 You first need to add the `reactor-pubsub` artifact into your list of
 dependencies:
@@ -154,6 +154,87 @@ puller
         })
         .subscribe();
 ```
+
+== Rate limiter
+
+We strongly encourage everyone to employ the provided rate limiter while
+consuming messages. The rationale is simple: In order to avoid burning GCP bills
+for nothing, you better cut down the consumption rate if the rest of the system
+is indicating a failure.
+
+`reactor-pubsub` provides the following utilities for rate limiting purposes:
+
+- `RateLimiter` is a simple (_package local_) rate limiter.
+
+- `StagedRateLimiter` is a rate limiter with multiple stages. Each stage is
+  composed of a _success rate_ and _failure rate_ pair. In the absence of
+  failure acknowledgements, excessive permit claims replace the active stage
+  with the next faster one, if there is any. Likewise, excessive failure
+  acknowledgements replace the active stage with the next slower one, if there
+  is any.
+
+One can employ the `StagedRateLimiter` for a `PubsubPuller` as follows:
+
+```java
+// Create the staged rate limiter and its reactor decorator.
+String stagedRateLimiterName = projectName + '/' + subscriptionName;
+StagedRateLimiter stagedRateLimiter = StagedRateLimiter
+        .builder()
+        .setName(stagedRateLimiterName)
+        .setSpec("1/1m:, 1/30s:1/1m, 1/1s:2/1m, :1/3m")     // (default)
+        .build();
+StagedRateLimiterReactorDecoratorFactory stagedRateLimiterReactorDecoratorFactory =
+        StagedRateLimiterReactorDecoratorFactory
+                .builder()
+                .setStagedRateLimiter(stagedRateLimiter)
+                .build();
+Function<Flux<PubsubPullResponse>, Flux<PubsubPullResponse>> stagedRateLimiterFluxDecorator =
+        stagedRateLimiterReactorDecoratorFactory.ofFlux();
+
+// Employ the staged rate limiter.
+puller
+        .pullAll()
+        .flatMap(pullResponse -> {
+            // ...
+            PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
+            return acker.ack(ackRequest);
+        })
+        .transform(stagedRateLimiterFluxDecorator)
+        .subscribe();
+```
+
+The stages are described in increasing success rate limit order using a
+specification format as follows: `1/1m:, 1/30s:1/1m, 1/1s:2/1m, :1/3m`. The
+specification is a comma-separated list of _[success rate limit]:[failure rate
+limit]_ pairs where, e.g., `1/1h` is used to denote a rate limit of a single
+permit per 1 hour. Temporal unit must be one of h(ours), m(inutes), or
+s(econds). The initial failure rate limit and the last success rate limit can be
+omitted to indicate no rate limits.) This example will result in the following
+stages.
+
+.`StagedRateLimiter` stages for specification `1/1m:, 1/30s:1/1m, 1/1s:2/1m, :1/3m`.
+|===
+| stage | success rate limit | failure rate limit
+
+| 1
+| 1/1m (once per minute)
+| infinite
+
+| 2
+| 1/30s (once per 30 second)
+| 1/1m (once per minute)
+
+| 3
+| 1/1s (once per second)
+| 2/1m (twice per minute)
+
+| 4
+| infinite
+| 1/3m (once per 3 minute)
+|===
+
+By contract, initially the active stage is set to the one with the slowest
+success rate limit.
 
 == Design Rationale
 

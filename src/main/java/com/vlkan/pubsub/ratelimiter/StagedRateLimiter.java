@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,8 +21,8 @@ import java.util.regex.Pattern;
  * if there is any.
  *
  * <p>The stages are described in increasing success rate limit order using a
- * specification format as follows: <code>2/1h:, 2/1m:1/1m, 2/1s:1/1s,
- * :30/1m</code>. The specification is a comma-separated list of <i>[success
+ * specification format as follows: <code>1/1m:, 1/30s:1/1m, 1/1s:2/1m,
+ * :1/3m</code>. The specification is a comma-separated list of <i>[success
  * rate limit]:[failure rate limit]</i> pairs where, e.g., <code>2/1h</code> is
  * used to denote a rate limit of 2 permits per 1 hour. Temporal unit must be
  * one of h(ours), m(inutes), or s(econds). The initial failure rate limit and
@@ -40,23 +41,23 @@ import java.util.regex.Pattern;
  *     <tbody>
  *         <tr>
  *             <td>1</td>
- *             <td>2/1h</td>
- *             <td>inf</td>
+ *             <td>1/1m (once per minute)</td>
+ *             <td>infinite</td>
  *         </tr>
  *         <tr>
  *             <td>2</td>
- *             <td>2/1m</td>
- *             <td>1/1m</td>
+ *             <td>1/30s (once per 30 second)</td>
+ *             <td>1/1m (once per minute)</td>
  *         </tr>
  *         <tr>
  *             <td>3</td>
- *             <td>2/1s</td>
- *             <td>1/1s</td>
+ *             <td>1/1s (once per second)</td>
+ *             <td>2/1m (twice per minute)</td>
  *         </tr>
  *         <tr>
  *             <td>4</td>
- *             <td>inf</td>
- *             <td>1/1s</td>
+ *             <td>infinute</td>
+ *             <td>1/3m (once per 3 minute)</td>
  *         </tr>
  *     </tbody>
  * </table>
@@ -69,7 +70,11 @@ public class StagedRateLimiter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StagedRateLimiter.class);
 
+    public static final String DEFAULT_RATE_LIMITER_SPEC = "1/1m:, 1/30s:1/1m, 1/1s:2/1m, :1/3m";
+
     private final String name;
+
+    private final String spec;
 
     private final List<String> successRateLimitSpecs;
 
@@ -92,11 +97,13 @@ public class StagedRateLimiter {
 
     private StagedRateLimiter(
             String name,
+            String spec,
             List<String> successRateLimitSpecs,
             List<String> failureRateLimitSpecs,
             List<RateLimiter> successRateLimiters,
             List<RateLimiter> failureRateLimiters) {
         this.name = name;
+        this.spec = spec;
         this.successRateLimitSpecs = successRateLimitSpecs;
         this.failureRateLimitSpecs = failureRateLimitSpecs;
         this.successRateLimiters = successRateLimiters;
@@ -104,10 +111,6 @@ public class StagedRateLimiter {
         this.rateLimiterCount = successRateLimiters.size();
         this.activeRateLimiterIndex = rateLimiterCount - 1;
 
-    }
-
-    public static StagedRateLimiter of(String name, String spec) {
-        return of(name, spec, RateLimiter::new);
     }
 
     static StagedRateLimiter of(String name, String spec, RateLimiterFactory rateLimiterFactory) {
@@ -192,6 +195,7 @@ public class StagedRateLimiter {
             // Create the instance.
             return new StagedRateLimiter(
                     name,
+                    spec,
                     successRateLimitSpecs,
                     failureRateLimitSpecs,
                     successRateLimiters,
@@ -229,6 +233,14 @@ public class StagedRateLimiter {
             case "s": return ChronoUnit.SECONDS;
             default: throw new IllegalArgumentException("unknown temporal unit: " + unit);
         }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSpec() {
+        return spec;
     }
 
     synchronized String getActiveSuccessRateLimitSpec() {
@@ -287,6 +299,35 @@ public class StagedRateLimiter {
                     "adjusting rate (name={}, direction={}, successRateLimitSpec={}, failureRateLimitSpec={})",
                     name, direction, successRateLimitSpec, failureRateLimitSpec);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+
+        private String name;
+
+        private String spec = DEFAULT_RATE_LIMITER_SPEC;
+
+        private Builder() {}
+
+        public Builder setName(String name) {
+            this.name = Objects.requireNonNull(name, "name");
+            return this;
+        }
+
+        public Builder setSpec(String spec) {
+            this.spec = Objects.requireNonNull(spec, "spec");
+            return this;
+        }
+
+        public StagedRateLimiter build() {
+            Objects.requireNonNull(name, "name");
+            return of(name, spec, RateLimiter::new);
+        }
+
     }
 
 }
