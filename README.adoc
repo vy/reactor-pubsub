@@ -155,7 +155,13 @@ puller
         .subscribe();
 ```
 
-== Rate limiter
+== Utilities
+
+The project ships a couple of utilities where you might find them handy in
+assembling your messaging pipeline. Even though they are optional, we strongly
+recommend their usage.
+
+=== Rate limiter
 
 We strongly encourage everyone to employ the provided rate limiter while
 consuming messages. The rationale is simple: In order to avoid burning GCP bills
@@ -236,7 +242,7 @@ stages.
 By contract, initially the active stage is set to the one with the slowest
 success rate limit.
 
-== Bounded `SchedulerExecutorService`
+=== Bounded `SchedulerExecutorService`
 
 `PubsubPuller`, `PubsubAccessTokenCache`, and
 `StagedRateLimiterReactorDecoratorFactory` optionally receive either a
@@ -294,11 +300,20 @@ puller
         .subscribe();
 ```
 
+== F.A.Q
+
+=== How one can build retries on top of `PubsubAcker`?
+
+See
+https://projectreactor.io/docs/core/release/reference/#faq.exponentialBackoff[How
+to use retryWhen for exponential backoff?] in Reactor reference manual.
+
 == Historical account
 
-I would like to take this opportunity to share the historical account from my
-perspective to justify the effort and defend it against any potential
-https://en.wikipedia.org/wiki/Not_invented_here[NIH] syndrome accusations.
+I (_Volkan Yazıcı_) would like to take this opportunity to share the historical
+account from my perspective to justify the effort and defend it against any
+potential https://en.wikipedia.org/wiki/Not_invented_here[NIH] syndrome
+accusations.
 
 *Why did I feel a need to implement a Pub/Sub Java driver from scratch?* At
 https://bol.com[bol.com], we heavily use Pub/Sub. There we started our pursuit
