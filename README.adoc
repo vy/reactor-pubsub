@@ -294,7 +294,11 @@ puller
         .subscribe();
 ```
 
-== Design Rationale
+== Historical account
+
+I would like to take this opportunity to share the historical account from my
+perspective to justify the effort and defend it against any potential
+https://en.wikipedia.org/wiki/Not_invented_here[NIH] syndrome accusations.
 
 *Why did I feel a need to implement a Pub/Sub Java driver from scratch?* At
 https://bol.com[bol.com], we heavily use Pub/Sub. There we started our pursuit
@@ -312,7 +316,7 @@ efficiency. Then I started examining the source code and wasted quite a lot of
 time trying to make forsaken
 https://github.com/googleapis/gax-java/blob/master/gax/src/main/java/com/google/api/gax/batching/FlowControlSettings.java[FlowControlSettings]
 work. This disappointing inquiry resulted in something remarkable: I understood
-how Pub/Sub works and amazed by the extent of complexity for a such simple task.
+how Pub/Sub works and amazed by the extent of complexity for such a simple task.
 I have already been using Reactive Streams (RxJava and Reactor) every single
 work day in the last five years and compiled a thick collection of lessons and
 recipes out of it. The more I examined the official Pub/Sub Java driver source
@@ -324,21 +328,15 @@ driver. I made my mind when I witnessed that
 https://github.com/spring-cloud/spring-cloud-gcp/pull/1461#discussion_r274098603[Google
 engineers are clueless about these problems].
 
-*Why are there no support for retries in the publisher out of the box?* Because
-you can simply get it via Reactor. Search for "retry" in
-https://projectreactor.io/docs/core/release/reference/#faq.exponentialBackoff[the
-Reactor documentation].
-
-*Why do you require a rate limiter in the subscriber?* One morning I came to the
-office and read an e-mail from one of the platform teams asking how come we
-managed to burn hundreds of dollars worth of Pub/Sub messaging in the middle of
-the night. One of the application (non-critical) databases happened to go down
-for a couple of hours and during that period nodes constantly sucked up messages
-and nack'ed them due to the database failure. This is an opinionated Pub/Sub
-driver and in my opinion you should not relentlessly burn Pub/Sub bills if the
-rest of the application is shouting out there is something going on wrong.
-Hence, please configure and use the god damn rate limiter. Yes, you can disable
-it by providing infinite limits, but I am not gonna serve to evil here.
+*Why all the fuss about the rate limiting?* One morning I came to the  office
+and read an e-mail from one of the platform teams asking how come we managed to
+burn hundreds of dollars worth of Pub/Sub messaging in the middle of the night.
+One of the application (non-critical) databases happened to go down for a couple
+of hours and during that period nodes constantly sucked up messages and nack'ed
+them due to the database failure. This is an opinionated Pub/Sub driver and in
+my opinion you should not relentlessly burn Pub/Sub bills if the rest of the
+application is shouting out there is something going on wrong. Hence, please
+configure and use the god damn rate limiter.
 
 == Contributors
 
