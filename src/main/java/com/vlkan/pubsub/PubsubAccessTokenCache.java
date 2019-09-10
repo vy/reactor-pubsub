@@ -102,6 +102,16 @@ public class PubsubAccessTokenCache {
     }
 
     String getAccessToken() {
+        if (accessToken == null) {
+            synchronized (this) {
+                if (accessToken == null) {
+                    refreshAccessToken();
+                }
+            }
+        }
+        if (accessToken == null) {
+            throw new IllegalStateException("access token is not available");
+        }
         return accessToken;
     }
 
@@ -131,12 +141,12 @@ public class PubsubAccessTokenCache {
         }
     }
 
-    private void refreshAccessToken() {
+    private synchronized void refreshAccessToken() {
         try {
             credentials.refreshIfExpired();
             this.accessToken = credentials.getAccessToken().getTokenValue();
         } catch (IOException error) {
-            LOGGER.error("Failed to fetch access token", error);
+            LOGGER.error("access token refresh failure", error);
         }
     }
 
