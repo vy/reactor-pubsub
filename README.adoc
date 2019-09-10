@@ -1,3 +1,6 @@
+http://travis-ci.org/vy/reactor-pubsub[image:https://secure.travis-ci.org/vy/reactor-pubsub.svg[Build Status]]
+https://www.apache.org/licenses/LICENSE-2.0.txt[image:https://img.shields.io/github/license/vy/reactor-pubsub.svg[License]]
+
 Finally a https://cloud.google.com/pubsub[Google Cloud Pub/Sub] Java 8 driver
 that you can wrap your head around its internals and put the fun (i.e.,
 backpressure-aware, reactive, efficient, batteries-included, and *simple*!) back
