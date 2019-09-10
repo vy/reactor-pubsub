@@ -104,7 +104,7 @@ public class PubsubPuller {
         public PubsubPuller build() {
             Objects.requireNonNull(config, "config");
             if (client == null) {
-                client = PubsubClient.DEFAULT_CLIENT_SUPPLIER.get();
+                client = PubsubClient.getDefaultClient();
             }
             return new PubsubPuller(this);
         }

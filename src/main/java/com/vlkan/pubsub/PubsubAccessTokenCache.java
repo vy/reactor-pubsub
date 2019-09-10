@@ -58,8 +58,9 @@ public class PubsubAccessTokenCache {
 
     }
 
-    public static final Supplier<ScheduledExecutorService> DEFAULT_EXECUTOR_SERVICE_SUPPLIER =
-            () -> DefaultExecutorServiceHolder.INSTANCE;
+    public static ScheduledExecutorService getDefaultExecutorService() {
+        return DefaultExecutorServiceHolder.INSTANCE;
+    }
 
     public static final Duration DEFAULT_ACCESS_TOKEN_REFRESH_PERIOD = Duration.ofMinutes(1);
 
@@ -70,8 +71,9 @@ public class PubsubAccessTokenCache {
 
     }
 
-    public static final Supplier<PubsubAccessTokenCache> DEFAULT_ACCESS_TOKEN_CACHE_SUPPLIER =
-            () -> DefaultAccessTokenCacheHolder.INSTANCE;
+    public static PubsubAccessTokenCache getDefaultAccessTokenCache() {
+        return DefaultAccessTokenCacheHolder.INSTANCE;
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PubsubAccessTokenCache.class);
 
@@ -166,7 +168,7 @@ public class PubsubAccessTokenCache {
 
         public PubsubAccessTokenCache build() {
             if (executorService == null) {
-                executorService = DEFAULT_EXECUTOR_SERVICE_SUPPLIER.get();
+                executorService = getDefaultExecutorService();
             }
             Objects.requireNonNull(accessTokenRefreshPeriod, "accessTokenRefreshPeriod");
             return new PubsubAccessTokenCache(this);
