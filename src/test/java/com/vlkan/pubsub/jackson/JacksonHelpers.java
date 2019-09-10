@@ -26,9 +26,9 @@ public enum JacksonHelpers {;
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static Map<String, Object> writeValueAsMap(Object object) {
         String json = writeValueAsString(object);
-        // noinspection unchecked
         return readValue(json, Map.class);
     }
 
