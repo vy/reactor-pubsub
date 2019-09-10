@@ -42,7 +42,7 @@ public class PubsubPullerConfig {
         this.pullBufferSize = builder.pullBufferSize;
         this.pullPeriod = builder.pullPeriod;
         this.projectName = builder.projectName;
-        this.subscriptionName = builder.projectName;
+        this.subscriptionName = builder.subscriptionName;
     }
 
     public int getPullConcurrency() {
