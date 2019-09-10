@@ -42,7 +42,7 @@ me"_), I needed to take some shortcuts to get this project going:
 
 - https://github.com/reactor/reactor-netty[Reactor Netty] for HTTP requests
 
-- https://github.com/googleapis/google-api-java-client[Google APIs Client
+- https://github.com/googleapis/google-auth-library-java[Google Auth
   Library]footnote:[This could have been replaced with a more lightweight
   alternative, but given you have already been using Pub/Sub, it is highly
   likely that you already sold your soul to some other Google Cloud services
@@ -286,11 +286,71 @@ puller
 
 == F.A.Q
 
-=== How one can build retries on top of `PubsubAcker`?
+=== How can I retry ack's?
 
 See
 https://projectreactor.io/docs/core/release/reference/#faq.exponentialBackoff[How
-to use retryWhen for exponential backoff?] in Reactor reference manual.
+to use `retryWhen` for exponential backoff?] in Reactor reference manual.
+
+=== How can I change the GCP credentials?
+
+Unless one provided, all `PubsubPublisher`, `PubsubPuller` and `PubsubAcker`
+classes use the `PubsubAccessTokenCache.getDefaultInstance()` and
+`PubsubClient.getDefaultInstance()` defaults. By default,
+`PubsubAccessTokenCache` leverages `GoogleCredentials.getApplicationDefault()`
+provided by the `google-auth-library-oauth2-http` artifact. This function
+determines the credentials by trying out the following steps in order:
+
+. Credentials file pointed to by the `GOOGLE_APPLICATION_CREDENTIALS`
+  environment variable
+
+. Credentials provided by the Google Cloud SDK `gcloud auth application-default
+  login` command
+
+. Google App Engine built-in credentials
+
+. Google Cloud Shell built-in credentials
+
+. Google Compute Engine built-in credentials
+
+Rather than relying on this mechanism, one can explicitly set the credentials
+as follows:
+
+```java
+// Create the access token cache.
+PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCache
+        .builder()
+        .setCredentials("awesome-password")     // null falls back to the defaults
+        .build();
+
+// Create the client.
+PubsubClient client = PubsubClient
+        .builder()
+        .setAccessTokenCache(accessTokenCache)
+        .build();
+
+// Create the puller.
+PubsubPuller puller = PubsubPuller
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+
+// Create the ack'er.
+PubsubAcker acker = PubsubAcker
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+
+// Create the publisher.
+PubsubPublisher publisher = PubsubPublisher
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+```
+
 
 == Historical account
 
