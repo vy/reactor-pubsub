@@ -25,7 +25,7 @@ public class PubsubPullerConfig {
 
     public static final int DEFAULT_PULL_BUFFER_SIZE = 100;
 
-    public static final Duration DEFAULT_PULL_PERIOD = Duration.ofSeconds(30);
+    public static final Duration DEFAULT_PULL_PERIOD = Duration.ZERO;
 
     private final int pullConcurrency;
 

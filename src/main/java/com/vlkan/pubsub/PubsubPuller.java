@@ -18,12 +18,15 @@ package com.vlkan.pubsub;
 
 import com.vlkan.pubsub.model.PubsubPullRequest;
 import com.vlkan.pubsub.model.PubsubPullResponse;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class PubsubPuller {
 
@@ -34,13 +37,16 @@ public class PubsubPuller {
     @Nullable
     private final Scheduler scheduler;
 
+    private final boolean immediateReturnEnabled;
+
     private final PubsubPullRequest pullRequest;
 
     private PubsubPuller(Builder builder) {
         this.config = builder.config;
         this.client = builder.client;
         this.scheduler = builder.scheduler;
-        this.pullRequest = new PubsubPullRequest(true, config.getPullBufferSize());
+        this.immediateReturnEnabled = !Duration.ZERO.equals(config.getPullPeriod());
+        this.pullRequest = new PubsubPullRequest(immediateReturnEnabled, config.getPullBufferSize());
     }
 
     public PubsubPullerConfig getConfig() {
@@ -57,18 +63,28 @@ public class PubsubPuller {
     }
 
     public Mono<PubsubPullResponse> pullOne() {
-        return client.pull(config.getProjectName(), config.getSubscriptionName(), pullRequest);
+        return client
+                .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
+                .filter(pullResponse -> !pullResponse.getReceivedAckableMessages().isEmpty());
     }
 
     public Flux<PubsubPullResponse> pullAll() {
         return client
                 .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
                 .filter(pullResponse -> !pullResponse.getReceivedAckableMessages().isEmpty())
-                .repeatWhenEmpty(scheduler == null
-                        ? flux -> flux.delayElements(config.getPullPeriod())
-                        : flux -> flux.delayElements(config.getPullPeriod(), scheduler))
+                .transform(this::delayEmptyPullsIfNecessary)
                 .repeat()
                 .checkpoint("pullAll");
+    }
+
+    private Mono<PubsubPullResponse> delayEmptyPullsIfNecessary(Mono<PubsubPullResponse> pullResponseMono) {
+        if (!immediateReturnEnabled) {
+            return pullResponseMono;
+        }
+        Function<Flux<Long>, ? extends Publisher<?>> repeatFactory = scheduler == null
+                ? flux -> flux.delayElements(config.getPullPeriod())
+                : flux -> flux.delayElements(config.getPullPeriod(), scheduler);
+        return pullResponseMono.repeatWhenEmpty(repeatFactory);
     }
 
     public static Builder builder() {
