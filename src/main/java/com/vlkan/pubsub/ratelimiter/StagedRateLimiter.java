@@ -113,6 +113,10 @@ public class StagedRateLimiter {
 
     }
 
+    static StagedRateLimiter of(String name, String spec) {
+        return of(name, spec, RateLimiter::new);
+    }
+
     static StagedRateLimiter of(String name, String spec, RateLimiterFactory rateLimiterFactory) {
         try {
 
