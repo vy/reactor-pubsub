@@ -120,7 +120,7 @@ public class PubsubPuller {
         public PubsubPuller build() {
             Objects.requireNonNull(config, "config");
             if (client == null) {
-                client = PubsubClient.getDefaultClient();
+                client = PubsubClient.getDefaultInstance();
             }
             return new PubsubPuller(this);
         }

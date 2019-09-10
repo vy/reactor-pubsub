@@ -64,14 +64,14 @@ public class PubsubClient {
         return DefaultHttpClientHolder.INSTANCE;
     }
 
-    private static final class DefaultClientHolder {
+    private static final class DefaultInstanceHolder {
 
         private static final PubsubClient INSTANCE = PubsubClient.builder().build();
 
     }
 
-    public static PubsubClient getDefaultClient() {
-        return DefaultClientHolder.INSTANCE;
+    public static PubsubClient getDefaultInstance() {
+        return DefaultInstanceHolder.INSTANCE;
     }
 
     private final PubsubClientConfig config;
@@ -340,7 +340,7 @@ public class PubsubClient {
                 httpClient = getDefaultHttpClient();
             }
             if (accessTokenCache == null) {
-                accessTokenCache = PubsubAccessTokenCache.getDefaultAccessTokenCache();
+                accessTokenCache = PubsubAccessTokenCache.getDefaultInstance();
             }
             return new PubsubClient(this);
         }

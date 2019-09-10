@@ -68,15 +68,15 @@ public class PubsubAccessTokenCache {
 
     public static final Duration DEFAULT_ACCESS_TOKEN_REFRESH_PERIOD = Duration.ofMinutes(1);
 
-    private static final class DefaultAccessTokenCacheHolder {
+    private static final class DefaultInstanceHolder {
 
         private static final PubsubAccessTokenCache INSTANCE =
                 PubsubAccessTokenCache.builder().build();
 
     }
 
-    public static PubsubAccessTokenCache getDefaultAccessTokenCache() {
-        return DefaultAccessTokenCacheHolder.INSTANCE;
+    public static PubsubAccessTokenCache getDefaultInstance() {
+        return DefaultInstanceHolder.INSTANCE;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PubsubAccessTokenCache.class);
