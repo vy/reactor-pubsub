@@ -83,8 +83,12 @@ publisher
         .publish(new PubsubPublishRequest(
                 Collections.singletonList(
                         new PubsubDraftedMessage(
-                                "Yolo like no is watching you!"
+                                "Yolo like nobody's watching!"
                                         .getBytes(StandardCharsets.UTF_8)))))
+        .doOnSuccess(publishResponse ->
+                System.out.format(
+                        "Published awesome message ids: %s%n",
+                        publishResponse.getMessageIds()))
         .subscribe();
 ```
 
