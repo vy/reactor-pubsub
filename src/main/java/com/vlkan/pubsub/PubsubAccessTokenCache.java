@@ -27,13 +27,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 
 public class PubsubAccessTokenCache {
 
@@ -51,7 +53,9 @@ public class PubsubAccessTokenCache {
                                 String name = String.format(
                                         "PubsubAccessTokenCacheWorker-%02d",
                                         threadCounter.incrementAndGet());
-                                return new Thread(runnable, name);
+                                Thread thread = new Thread(runnable, name);
+                                thread.setDaemon(true);
+                                return thread;
                             }
 
                         }));
