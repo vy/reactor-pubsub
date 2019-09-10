@@ -32,11 +32,11 @@ public class JacksonInstantDeserializerTest {
     }
 
     private void test(@Nullable Instant expectedInstant) {
-        Long expectedInstantMillis = expectedInstant != null
-                ? expectedInstant.toEpochMilli()
+        String expectedInstantString = expectedInstant != null
+                ? expectedInstant.toString()
                 : null;
         String json = JacksonHelpers.writeValueAsString(
-                Collections.singletonMap("instant", expectedInstantMillis));
+                Collections.singletonMap("instant", expectedInstantString));
         TestModel testModel = JacksonHelpers.readValue(json, TestModel.class);
         @Nullable Instant actualInstant = testModel.instant;
         Assertions.assertThat(actualInstant).isEqualTo(expectedInstant);

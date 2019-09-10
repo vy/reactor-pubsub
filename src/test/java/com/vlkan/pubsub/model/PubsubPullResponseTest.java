@@ -39,7 +39,7 @@ public class PubsubPullResponseTest {
         Instant expectedInstant1 = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload1 = {1, 2, 3};
         Map<String, Object> expectedReceivedMessage1Map = MapHelpers.createMap(
-                "publishTime", expectedInstant1.toEpochMilli(),
+                "publishTime", expectedInstant1.toString(),
                 "messageId", "messageId1",
                 "data", Base64.getEncoder().encodeToString(expectedPayload1));
         Map<String, Object> expectedReceivedAckableMessage1Map = MapHelpers.createMap(
@@ -48,7 +48,7 @@ public class PubsubPullResponseTest {
         Instant expectedInstant2 = expectedInstant1.plus(Duration.ofMinutes(1));
         byte[] expectedPayload2 = {4, 5, 6};
         Map<String, Object> expectedReceivedMessage2Map = MapHelpers.createMap(
-                "publishTime", expectedInstant2.toEpochMilli(),
+                "publishTime", expectedInstant2.toString(),
                 "messageId", "messageId2",
                 "data", Base64.getEncoder().encodeToString(expectedPayload2));
         Map<String, Object> expectedReceivedAckableMessage2Map = MapHelpers.createMap(

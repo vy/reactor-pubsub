@@ -55,7 +55,7 @@ public class PubsubReceivedMessageTest {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = '{' +
-                            "\"publishTime\": " + PUBLISH_TIME_INSTANT.toEpochMilli() +
+                            "\"publishTime\": \"" + PUBLISH_TIME_INSTANT + '"' +
                             ",\"data\": \"" + DATA_STRING + "\"" +
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
@@ -69,7 +69,7 @@ public class PubsubReceivedMessageTest {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = '{' +
-                            "\"publishTime\": " + PUBLISH_TIME_INSTANT.toEpochMilli() +
+                            "\"publishTime\": \"" + PUBLISH_TIME_INSTANT + '"' +
                             ",\"messageId\": null" +
                             ",\"data\": \"" + DATA_STRING + "\"" +
                             '}';
@@ -84,7 +84,7 @@ public class PubsubReceivedMessageTest {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = '{' +
-                            "\"publishTime\": " + PUBLISH_TIME_INSTANT.toEpochMilli() +
+                            "\"publishTime\": \"" + PUBLISH_TIME_INSTANT + '"' +
                             ",\"messageId\": \"" + MESSAGE_ID + "\"" +
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
@@ -98,7 +98,7 @@ public class PubsubReceivedMessageTest {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = '{' +
-                            "\"publishTime\": " + PUBLISH_TIME_INSTANT.toEpochMilli() +
+                            "\"publishTime\": \"" + PUBLISH_TIME_INSTANT + '"' +
                             ",\"messageId\": \"" + MESSAGE_ID + "\"" +
                             ",\"data\": null" +
                             '}';
@@ -115,7 +115,7 @@ public class PubsubReceivedMessageTest {
         Instant expectedInstant = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload = {1, 2, 3};
         Map<String, Object> expectedMessageMap = MapHelpers.createMap(
-                "publishTime", expectedInstant.toEpochMilli(),
+                "publishTime", expectedInstant.toString(),
                 "messageId", "messageId1",
                 "data", Base64.getEncoder().encodeToString(expectedPayload));
         String messageJson = JacksonHelpers.writeValueAsString(expectedMessageMap);

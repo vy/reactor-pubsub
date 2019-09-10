@@ -31,8 +31,8 @@ public class JacksonInstantDeserializer extends StdScalarDeserializer<Instant> {
 
     @Override
     public Instant deserialize(JsonParser parser, DeserializationContext context) throws IOException {
-        long utcEpochMillis = parser.getLongValue();
-        return Instant.ofEpochMilli(utcEpochMillis);
+        String utcInstantString = parser.getValueAsString();
+        return Instant.parse(utcInstantString);
     }
 
 }
