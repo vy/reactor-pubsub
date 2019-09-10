@@ -241,7 +241,13 @@ public class PubsubClient {
                                 throw new RuntimeException(message);
                             }
                             return responsePayloadByteBufMono
-                                    .map(responsePayloadByteBuf -> deserializeResponsePayload(responsePayloadByteBuf, responseClass))
+                                    .asByteArray()
+                                    .flatMap(responsePayloadBytes -> {
+                                        @Nullable T responsePayload = deserializeResponsePayload(responsePayloadBytes, responseClass);
+                                        return responsePayload != null
+                                                ? Mono.just(responsePayload)
+                                                : Mono.empty();
+                                    })
                                     .checkpoint("deserializeResponsePayload");
                         })
                         .timeout(timeout));
@@ -268,9 +274,9 @@ public class PubsubClient {
         }
     }
 
-    private <T> T deserializeResponsePayload(ByteBuf responsePayloadByteBuf, Class<T> responsePayloadClass) {
+    @Nullable
+    private <T> T deserializeResponsePayload(byte[] responsePayloadBytes, Class<T> responsePayloadClass) {
         try {
-            byte[] responsePayloadBytes = responsePayloadByteBuf.array();
             return objectMapper.readValue(responsePayloadBytes, responsePayloadClass);
         } catch (IOException error) {
             String responsePayloadClassName = responsePayloadClass.getCanonicalName();
