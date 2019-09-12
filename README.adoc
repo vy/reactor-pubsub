@@ -51,7 +51,7 @@ me"_), I needed to take some shortcuts to get this project going:
 - https://github.com/FasterXML/jackson-databind[Jackson]footnote:[https://github.com/googleapis/google-api-java-client[Google
   APIs Client Library] already depends on this library.] for JSON serialization
 
-- http://micrometer.io/[Micrometer] for metrics
+- http://micrometer.io/[Micrometer] for metrics _(optional)_
 
 == Getting started
 
