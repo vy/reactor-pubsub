@@ -34,6 +34,7 @@ import reactor.netty.http.client.HttpClient;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
@@ -102,8 +103,8 @@ public class PubsubClient {
             this.counterByRequestUrl = null;
         } else {
             this.meterRegistry = builder.meterRegistry;
-            this.timerByRequestUrl = new WeakHashMap<>();
-            this.counterByRequestUrl = new WeakHashMap<>();
+            this.timerByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
+            this.counterByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
         }
     }
 
@@ -130,12 +131,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
+                        config.getMeterName(),
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
+                        config.getMeterName(),
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,
@@ -166,12 +169,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
+                        config.getMeterName(),
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
+                        config.getMeterName(),
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,
@@ -202,12 +207,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
+                        config.getMeterName(),
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
+                        config.getMeterName(),
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,

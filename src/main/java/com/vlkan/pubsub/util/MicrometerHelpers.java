@@ -30,6 +30,7 @@ public enum MicrometerHelpers {;
 
     public static <T> Mono<T> measureLatency(
             MeterRegistry meterRegistry,
+            String meterName,
             Map<String, Timer> timerByKey,
             String key,
             Supplier<String[]> tagSupplier,
@@ -40,14 +41,15 @@ public enum MicrometerHelpers {;
                         .doOnSuccessOrError((ignoredValue, error) -> {
                             long durationNanos = System.nanoTime() - startInstantNanos;
                             Timer timer = error == null
-                                    ? createSuccessTimer(meterRegistry, timerByKey, key, tagSupplier)
-                                    : createFailureTimer(meterRegistry, timerByKey, key, tagSupplier, error);
+                                    ? createSuccessTimer(meterRegistry, meterName, timerByKey, key, tagSupplier)
+                                    : createFailureTimer(meterRegistry, meterName, timerByKey, key, tagSupplier, error);
                             timer.record(durationNanos, TimeUnit.NANOSECONDS);
                         }));
     }
 
     private static Timer createSuccessTimer(
             MeterRegistry meterRegistry,
+            String meterName,
             Map<String, Timer> timerByKey,
             String key,
             Supplier<String[]> tagSupplier) {
@@ -58,12 +60,13 @@ public enum MicrometerHelpers {;
             System.arraycopy(tags, 0, extendedTags, 2, tags.length);
             extendedTags[0] = "result";
             extendedTags[1] = "success";
-            return meterRegistry.timer(key, extendedTags);
+            return meterRegistry.timer(meterName, extendedTags);
         });
     }
 
     private static Timer createFailureTimer(
             MeterRegistry meterRegistry,
+            String meterName,
             Map<String, Timer> timerByKey,
             String key,
             Supplier<String[]> tagSupplier,
@@ -81,12 +84,13 @@ public enum MicrometerHelpers {;
             extendedTags[1] = "success";
             extendedTags[2] = "rootCauseClassName";
             extendedTags[3] = rootCauseClassName;
-            return meterRegistry.timer(key, extendedTags);
+            return meterRegistry.timer(meterName, extendedTags);
         });
     }
 
     public static <T, N extends Number> Mono<T> measureCount(
             MeterRegistry meterRegistry,
+            String meterName,
             Map<String, Counter> counterByKey,
             String key,
             Supplier<String[]> tagSupplier,
@@ -97,7 +101,7 @@ public enum MicrometerHelpers {;
             counterByKey
                     .computeIfAbsent(key, ignored -> {
                         String[] tags = tagSupplier.get();
-                        return meterRegistry.counter(key, tags);
+                        return meterRegistry.counter(meterName, tags);
                     })
                     .increment(count.doubleValue());
         });
