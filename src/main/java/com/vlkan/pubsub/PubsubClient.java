@@ -123,11 +123,10 @@ public class PubsubClient {
             String subscriptionName,
             PubsubPullRequest pullRequest,
             String requestUrl) {
-        Supplier<String[]> tagSupplier = () -> new String[]{
+        Supplier<String[]> tagSupplier = createMeterTagSupplier(
                 "operation", "pull",
                 "projectName", projectName,
-                "subscriptionName", subscriptionName
-        };
+                "subscriptionName", subscriptionName);
         return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
@@ -161,11 +160,10 @@ public class PubsubClient {
             String subscriptionName,
             PubsubAckRequest ackRequest,
             String requestUrl) {
-        Supplier<String[]> tagSupplier = () -> new String[]{
+        Supplier<String[]> tagSupplier = createMeterTagSupplier(
                 "operation", "publish",
                 "projectName", projectName,
-                "subscriptionName", subscriptionName
-        };
+                "subscriptionName", subscriptionName);
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
@@ -199,11 +197,10 @@ public class PubsubClient {
             String topicName,
             PubsubPublishRequest publishRequest,
             String requestUrl) {
-        Supplier<String[]> tagSupplier = () -> new String[]{
+        Supplier<String[]> tagSupplier = createMeterTagSupplier(
                 "operation", "publish",
                 "projectName", projectName,
-                "topicName", topicName
-        };
+                "topicName", topicName);
         return executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
@@ -258,6 +255,20 @@ public class PubsubClient {
                                     .checkpoint("deserializeResponsePayload");
                         })
                         .timeout(timeout));
+    }
+
+    private Supplier<String[]> createMeterTagSupplier(String... extensionTags) {
+        return () -> {
+            Map<String, String> commonTags = config.getMeterTags();
+            String[] tags = new String[extensionTags.length + commonTags.size() * 2];
+            System.arraycopy(extensionTags, 0, tags, 0, extensionTags.length);
+            int[] i = {extensionTags.length};
+            commonTags.forEach((tagName, tagValue) -> {
+                tags[i[0]++] = tagName;
+                tags[i[0]++] = tagValue;
+            });
+            return tags;
+        };
     }
 
     private static boolean is2xxSuccessful(HttpResponseStatus status) {

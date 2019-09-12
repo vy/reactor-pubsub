@@ -20,6 +20,8 @@ import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 public class PubsubClientConfig {
@@ -36,6 +38,8 @@ public class PubsubClientConfig {
 
     public static final String DEFAULT_METER_NAME = "pubsub.client";
 
+    public static final Map<String, String> DEFAULT_METER_TAGS = Collections.emptyMap();
+
     public static final PubsubClientConfig DEFAULT = builder().build();
 
     private final String baseUrl;
@@ -51,6 +55,8 @@ public class PubsubClientConfig {
 
     private final String meterName;
 
+    private final Map<String, String> meterTags;
+
     private PubsubClientConfig(Builder builder) {
         this.baseUrl = builder.baseUrl;
         this.pullTimeout = builder.pullTimeout;
@@ -58,6 +64,7 @@ public class PubsubClientConfig {
         this.ackTimeout = builder.ackTimeout;
         this.userAgent = builder.userAgent;
         this.meterName = builder.meterName;
+        this.meterTags = builder.meterTags;
     }
 
     public String getBaseUrl() {
@@ -85,6 +92,10 @@ public class PubsubClientConfig {
         return meterName;
     }
 
+    public Map<String, String> getMeterTags() {
+        return meterTags;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -103,6 +114,8 @@ public class PubsubClientConfig {
         private String userAgent = DEFAULT_USER_AGENT;
 
         private String meterName = DEFAULT_METER_NAME;
+
+        private Map<String, String> meterTags = DEFAULT_METER_TAGS;
 
         private Builder() {}
 
@@ -142,6 +155,11 @@ public class PubsubClientConfig {
             return this;
         }
 
+        public Builder setMeterTags(Map<String, String> meterTags) {
+            this.meterTags = Objects.requireNonNull(meterTags, "meterTags");
+            return this;
+        }
+
         public PubsubClientConfig build() {
             return new PubsubClientConfig(this);
         }
@@ -158,7 +176,8 @@ public class PubsubClientConfig {
                 publishTimeout.equals(that.publishTimeout) &&
                 ackTimeout.equals(that.ackTimeout) &&
                 Objects.equals(userAgent, that.userAgent) &&
-                meterName.equals(that.meterName);
+                meterName.equals(that.meterName) &&
+                meterTags.equals(that.meterTags);
     }
 
     @Override
@@ -169,7 +188,8 @@ public class PubsubClientConfig {
                 publishTimeout,
                 ackTimeout,
                 userAgent,
-                meterName);
+                meterName,
+                meterTags);
     }
 
 }
