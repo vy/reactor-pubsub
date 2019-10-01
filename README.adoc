@@ -351,6 +351,44 @@ PubsubPublisher publisher = PubsubPublisher
         .build();
 ```
 
+=== How can I enable metrics?
+
+Given http://micrometer.io/[Micrometer] is used for metrics, you first need to
+have it in your list of dependencies:
+
+```xml
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-core</artifactId>
+    <version>${micrometer.version}</version>
+</dependency>
+```
+
+Both `PubsubClient` and `StagedRateLimiterReactorDecoratorFactory` provide
+means to configure metrics. Each can be simply configured as follows:
+
+```java
+// Create a meter registry.
+MeterRegistry meterRegistry = ...;
+
+// Pass the meter registry to the Pub/Sub client.
+PubsubClient
+        .builder()
+        .setMeterRegistry(meterRegistry)
+        .setMeterName("pubsub.client")                  // default
+        .setMeterTags(Collections.emptyMap())           // default
+        // ...
+        .build();
+
+// Pass the meter registry to the rate limiter factory.
+StagedRateLimiterReactorDecoratorFactory
+        .builder()
+        .setMeterRegistry(meterRegistry)
+        .setMeterName("pubsub.stagedRateLimiter")       // default
+        .setMeterTags(Collections.emptyMap())           // default
+        // ...
+        .build();
+```
 
 == Historical account
 

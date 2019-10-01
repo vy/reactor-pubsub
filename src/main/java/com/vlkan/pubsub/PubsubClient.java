@@ -75,6 +75,10 @@ public class PubsubClient {
         return DefaultInstanceHolder.INSTANCE;
     }
 
+    public static final String DEFAULT_METER_NAME = "pubsub.client";
+
+    public static final Map<String, String> DEFAULT_METER_TAGS = Collections.emptyMap();
+
     private final PubsubClientConfig config;
 
     private final ObjectMapper objectMapper;
@@ -85,6 +89,10 @@ public class PubsubClient {
 
     @Nullable
     private final MeterRegistry meterRegistry;
+
+    private final String meterName;
+
+    private final Map<String, String> meterTags;
 
     @Nullable
     private final Map<String, Timer> timerByRequestUrl;
@@ -106,6 +114,8 @@ public class PubsubClient {
             this.timerByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
             this.counterByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
         }
+        this.meterName = builder.meterName;
+        this.meterTags = builder.meterTags;
     }
 
     Mono<PubsubPullResponse> pull(String projectName, String subscriptionName, PubsubPullRequest pullRequest) {
@@ -130,14 +140,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,
@@ -167,14 +177,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,
@@ -204,14 +214,14 @@ public class PubsubClient {
         return executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         timerByRequestUrl,
                         requestUrl,
                         tagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        config.getMeterName(),
+                        meterName,
                         counterByRequestUrl,
                         requestUrl,
                         tagSupplier,
@@ -259,11 +269,10 @@ public class PubsubClient {
 
     private Supplier<String[]> createMeterTagSupplier(String... extensionTags) {
         return () -> {
-            Map<String, String> commonTags = config.getMeterTags();
-            String[] tags = new String[extensionTags.length + commonTags.size() * 2];
+            String[] tags = new String[extensionTags.length + meterTags.size() * 2];
             System.arraycopy(extensionTags, 0, tags, 0, extensionTags.length);
             int[] i = {extensionTags.length};
-            commonTags.forEach((tagName, tagValue) -> {
+            meterTags.forEach((tagName, tagValue) -> {
                 tags[i[0]++] = tagName;
                 tags[i[0]++] = tagValue;
             });
@@ -322,6 +331,10 @@ public class PubsubClient {
         @Nullable
         private MeterRegistry meterRegistry;
 
+        private String meterName = DEFAULT_METER_NAME;
+
+        private Map<String, String> meterTags = DEFAULT_METER_TAGS;
+
         private Builder() {}
 
         public Builder setConfig(PubsubClientConfig config) {
@@ -347,6 +360,16 @@ public class PubsubClient {
 
         public Builder setMeterRegistry(MeterRegistry meterRegistry) {
             this.meterRegistry = Objects.requireNonNull(meterRegistry, "meterRegistry");
+            return this;
+        }
+
+        public Builder setMeterName(String meterName) {
+            this.meterName = Objects.requireNonNull(meterName, "meterName");
+            return this;
+        }
+
+        public Builder setMeterTags(Map<String, String> meterTags) {
+            this.meterTags = Objects.requireNonNull(meterTags, "meterTags");
             return this;
         }
 
