@@ -390,6 +390,46 @@ StagedRateLimiterReactorDecoratorFactory
         .build();
 ```
 
+=== How can I run it against the Pub/Sub emulator?
+
+Pub/Sub provides an https://cloud.google.com/pubsub/docs/emulator[emulator]
+to test your applications locally. In order to use it in combination with
+`reactor-pubsub`, you need to configure the `baseUrl` of the `PubsubClient` as
+follows:
+
+```java
+// Create a custom client.
+PubsubClientConfig clientConfig = PubsubClientConfig
+        .builder()
+        .setBaseUrl("http://localhost:8085")
+        .build();
+PubsubClient client = PubsubClient
+        .builder()
+        .setConfig(clientConfig)
+        .build();
+
+// Create a publisher.
+PubsubPublisher publisher = PubsubPublisher
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+
+// Create a puller.
+PubsubPuller puller = PubsubPuller
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+
+// Create an acker.
+PubsubAcker acker = PubsubAcker
+        .builder()
+        .setClient(client)
+        // ...
+        .build();
+```
+
 == Historical account
 
 I (_Volkan Yazıcı_) would like to take this opportunity to share the historical
