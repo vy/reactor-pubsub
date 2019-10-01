@@ -171,7 +171,7 @@ public class PubsubClient {
             PubsubAckRequest ackRequest,
             String requestUrl) {
         Supplier<String[]> tagSupplier = createMeterTagSupplier(
-                "operation", "publish",
+                "operation", "ack",
                 "projectName", projectName,
                 "subscriptionName", subscriptionName);
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
