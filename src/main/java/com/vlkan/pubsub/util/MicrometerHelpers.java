@@ -81,7 +81,7 @@ public enum MicrometerHelpers {;
             String[] extendedTags = new String[tags.length + 4];
             System.arraycopy(tags, 0, extendedTags, 4, tags.length);
             extendedTags[0] = "result";
-            extendedTags[1] = "success";
+            extendedTags[1] = "failure";
             extendedTags[2] = "rootCauseClassName";
             extendedTags[3] = rootCauseClassName;
             return meterRegistry.timer(meterName, extendedTags);
