@@ -21,13 +21,9 @@ import java.util.Objects;
 
 public class PubsubPullerConfig {
 
-    public static final int DEFAULT_PULL_CONCURRENCY = 4;
-
     public static final int DEFAULT_PULL_BUFFER_SIZE = 100;
 
     public static final Duration DEFAULT_PULL_PERIOD = Duration.ZERO;
-
-    private final int pullConcurrency;
 
     private final int pullBufferSize;
 
@@ -38,15 +34,10 @@ public class PubsubPullerConfig {
     private final String subscriptionName;
 
     private PubsubPullerConfig(Builder builder) {
-        this.pullConcurrency = builder.pullConcurrency;
         this.pullBufferSize = builder.pullBufferSize;
         this.pullPeriod = builder.pullPeriod;
         this.projectName = builder.projectName;
         this.subscriptionName = builder.subscriptionName;
-    }
-
-    public int getPullConcurrency() {
-        return pullConcurrency;
     }
 
     public int getPullBufferSize() {
@@ -70,8 +61,7 @@ public class PubsubPullerConfig {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         PubsubPullerConfig that = (PubsubPullerConfig) object;
-        return pullConcurrency == that.pullConcurrency &&
-                pullBufferSize == that.pullBufferSize &&
+        return pullBufferSize == that.pullBufferSize &&
                 pullPeriod.equals(that.pullPeriod) &&
                 projectName.equals(that.projectName) &&
                 subscriptionName.equals(that.subscriptionName);
@@ -80,7 +70,6 @@ public class PubsubPullerConfig {
     @Override
     public int hashCode() {
         return Objects.hash(
-                pullConcurrency,
                 pullBufferSize,
                 pullPeriod,
                 projectName,
@@ -101,8 +90,6 @@ public class PubsubPullerConfig {
 
     public static final class Builder {
 
-        private int pullConcurrency = DEFAULT_PULL_CONCURRENCY;
-
         private int pullBufferSize = DEFAULT_PULL_BUFFER_SIZE;
 
         private Duration pullPeriod = DEFAULT_PULL_PERIOD;
@@ -112,15 +99,6 @@ public class PubsubPullerConfig {
         private String subscriptionName;
 
         private Builder() {}
-
-        public Builder setPullConcurrency(int pullConcurrency) {
-            if (pullConcurrency < 1) {
-                throw new IllegalArgumentException(
-                        "was expecting a non-zero positive pull concurrency");
-            }
-            this.pullConcurrency = pullConcurrency;
-            return this;
-        }
 
         public Builder setPullBufferSize(int pullBufferSize) {
             if (pullBufferSize < 1) {
