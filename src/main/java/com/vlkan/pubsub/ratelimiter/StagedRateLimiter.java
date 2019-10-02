@@ -30,14 +30,14 @@ import java.util.regex.Pattern;
  * example will result in the following stages.
  *
  * <blockquote>
- * <table>
- *     <th>
+ * <table summary="Description of the rate limiter stages.">
+ *     <thead>
  *         <tr>
- *             <td>stage</td>
- *             <td>success rate limit</td>
- *             <td>failure rate limit</td>
+ *             <th>stage</th>
+ *             <th>success rate limit</th>
+ *             <th>failure rate limit</th>
  *         </tr>
- *     </th>
+ *     </thead>
  *     <tbody>
  *         <tr>
  *             <td>1</td>
