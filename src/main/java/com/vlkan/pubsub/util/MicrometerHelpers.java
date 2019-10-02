@@ -56,10 +56,12 @@ public enum MicrometerHelpers {;
         String mapKey = key + "/success";
         return timerByKey.computeIfAbsent(mapKey, ignoredKey -> {
             String[] tags = tagSupplier.get();
-            String[] extendedTags = new String[tags.length + 2];
-            System.arraycopy(tags, 0, extendedTags, 2, tags.length);
-            extendedTags[0] = "result";
-            extendedTags[1] = "success";
+            String[] extendedTags = new String[tags.length + 4];
+            System.arraycopy(tags, 0, extendedTags, 4, tags.length);
+            extendedTags[0] = "type";
+            extendedTags[1] = "timer";
+            extendedTags[2] = "result";
+            extendedTags[3] = "success";
             return meterRegistry.timer(meterName, extendedTags);
         });
     }
@@ -78,12 +80,14 @@ public enum MicrometerHelpers {;
         String mapKey = key + "/failure/" + rootCauseClassName;
         return timerByKey.computeIfAbsent(mapKey, ignoredKey -> {
             String[] tags = tagSupplier.get();
-            String[] extendedTags = new String[tags.length + 4];
-            System.arraycopy(tags, 0, extendedTags, 4, tags.length);
-            extendedTags[0] = "result";
-            extendedTags[1] = "failure";
-            extendedTags[2] = "rootCauseClassName";
-            extendedTags[3] = rootCauseClassName;
+            String[] extendedTags = new String[tags.length + 6];
+            System.arraycopy(tags, 0, extendedTags, 6, tags.length);
+            extendedTags[0] = "type";
+            extendedTags[1] = "timer";
+            extendedTags[2] = "result";
+            extendedTags[3] = "failure";
+            extendedTags[4] = "rootCauseClassName";
+            extendedTags[5] = rootCauseClassName;
             return meterRegistry.timer(meterName, extendedTags);
         });
     }
@@ -101,7 +105,11 @@ public enum MicrometerHelpers {;
             counterByKey
                     .computeIfAbsent(key, ignored -> {
                         String[] tags = tagSupplier.get();
-                        return meterRegistry.counter(meterName, tags);
+                        String[] extendedTags = new String[tags.length + 2];
+                        System.arraycopy(tags, 0, extendedTags, 2, tags.length);
+                        extendedTags[0] = "type";
+                        extendedTags[1] = "counter";
+                        return meterRegistry.counter(meterName, extendedTags);
                     })
                     .increment(count.doubleValue());
         });

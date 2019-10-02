@@ -34,7 +34,8 @@ public class StagedRateLimiterReactorDecoratorFactory {
             permitWaitPeriodDistributions = null;
         } else {
             DistributionSummary.Builder meterBuilder = DistributionSummary
-                    .builder(builder.meterName)
+                    .builder(builder.meterName + ".permitWaitPeriod")
+                    .tag("type", "summary")
                     .tag("name", stagedRateLimiter.getName());
             builder.meterTags.forEach(meterBuilder::tag);
             permitWaitPeriodDistributions = meterBuilder.register(builder.meterRegistry);
