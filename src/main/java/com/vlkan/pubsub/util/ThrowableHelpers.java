@@ -21,6 +21,8 @@ public enum ThrowableHelpers {;
     /**
      * Returns the innermost cause of {@code throwable}. The first throwable in a chain provides
      * context from when the error or exception was initially detected.
+     * @param throwable the outermost error
+     * @return the root cause
      */
     public static Throwable findRootCause(Throwable throwable) {
         // Keep a second pointer that slowly walks the causal chain. If the fast pointer ever catches
