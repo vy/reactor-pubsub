@@ -1,5 +1,7 @@
 == (YYYY-mm-dd) v0.1.1
 
+- Upgrade `reactor-netty` to version `0.8.12.RELEASE`. (#11)
+
 - Add `CHANGELOG.adoc`. (#13)
 
 - Disable timeout on long-polling pulls. (#8)
