@@ -1,0 +1,5 @@
+== (YYYY-mm-dd) v0.1.1
+
+- Add `CHANGELOG.adoc`. (#13)
+
+- Disable timeout on long-polling pulls. (#8)
