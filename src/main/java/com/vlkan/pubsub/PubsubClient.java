@@ -118,13 +118,19 @@ public class PubsubClient {
         this.meterTags = builder.meterTags;
     }
 
-    Mono<PubsubPullResponse> pull(String projectName, String subscriptionName, PubsubPullRequest pullRequest) {
+    Mono<PubsubPullResponse> pull(
+            String projectName,
+            String subscriptionName,
+            PubsubPullRequest pullRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/subscriptions/%s:pull",
                 config.getBaseUrl(), projectName, subscriptionName);
+        Duration timeout = pullRequest.isImmediateReturnEnabled()
+                ? config.getPullTimeout()
+                : Duration.ZERO;
         Mono<PubsubPullResponse> pullResponseMono = meterRegistry == null
-                ? executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
-                : pullMeasured(projectName, subscriptionName, pullRequest, requestUrl);
+                ? executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, timeout)
+                : pullMeasured(projectName, subscriptionName, pullRequest, requestUrl, timeout);
         return pullResponseMono.checkpoint(requestUrl);
     }
 
@@ -132,12 +138,13 @@ public class PubsubClient {
             String projectName,
             String subscriptionName,
             PubsubPullRequest pullRequest,
-            String requestUrl) {
+            String requestUrl,
+            Duration timeout) {
         Supplier<String[]> tagSupplier = createMeterTagSupplier(
                 "operation", "pull",
                 "projectName", projectName,
                 "subscriptionName", subscriptionName);
-        return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, config.getPullTimeout())
+        return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, timeout)
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
                         meterName,
@@ -155,7 +162,10 @@ public class PubsubClient {
                         mono));
     }
 
-    Mono<Void> ack(String projectName, String subscriptionName, PubsubAckRequest ackRequest) {
+    Mono<Void> ack(
+            String projectName,
+            String subscriptionName,
+            PubsubAckRequest ackRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/subscriptions/%s:acknowledge",
                 config.getBaseUrl(), projectName, subscriptionName);
@@ -192,7 +202,10 @@ public class PubsubClient {
                         mono));
     }
 
-    Mono<PubsubPublishResponse> publish(String projectName, String topicName, PubsubPublishRequest publishRequest) {
+    Mono<PubsubPublishResponse> publish(
+            String projectName,
+            String topicName,
+            PubsubPublishRequest publishRequest) {
         String requestUrl = String.format(
                 "%s/v1/projects/%s/topics/%s:publish",
                 config.getBaseUrl(), projectName, topicName);
@@ -229,7 +242,11 @@ public class PubsubClient {
                         mono));
     }
 
-    private <T> Mono<T> executeRequest(String requestUrl, Object requestPayload, Class<T> responseClass, Duration timeout) {
+    private <T> Mono<T> executeRequest(
+            String requestUrl,
+            Object requestPayload,
+            Class<T> responseClass,
+            Duration timeout) {
         Mono<ByteBuf> requestPayloadByteBufMono = Mono
                 .fromCallable(() -> serializeRequestPayload(requestPayload))
                 .checkpoint("serializeRequestPayload");
@@ -264,7 +281,9 @@ public class PubsubClient {
                                     })
                                     .checkpoint("deserializeResponsePayload");
                         })
-                        .timeout(timeout));
+                        .transform(responseMono -> Duration.ZERO.equals(timeout)
+                                ? responseMono
+                                : responseMono.timeout(timeout)));
     }
 
     private Supplier<String[]> createMeterTagSupplier(String... extensionTags) {
@@ -302,7 +321,9 @@ public class PubsubClient {
     }
 
     @Nullable
-    private <T> T deserializeResponsePayload(byte[] responsePayloadBytes, Class<T> responsePayloadClass) {
+    private <T> T deserializeResponsePayload(
+            byte[] responsePayloadBytes,
+            Class<T> responsePayloadClass) {
         try {
             return objectMapper.readValue(responsePayloadBytes, responsePayloadClass);
         } catch (IOException error) {
