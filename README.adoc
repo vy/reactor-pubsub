@@ -1,3 +1,4 @@
+https://github.com/vy/reactor-pubsub/actions[image:https://github.com/vy/reactor-pubsub/workflows/CI/badge.svg[Actions Status]]
 https://search.maven.org/search?q=g:com.vlkan%20a:reactor-pubsub[image:https://img.shields.io/maven-central/v/com.vlkan/reactor-pubsub.svg[Maven Central]]
 https://www.apache.org/licenses/LICENSE-2.0.txt[image:https://img.shields.io/github/license/vy/reactor-pubsub.svg[License]]
 
