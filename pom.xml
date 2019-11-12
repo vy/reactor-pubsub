@@ -66,7 +66,6 @@
 
         <!-- library versions -->
         <assertj-core.version>3.12.2</assertj-core.version>
-        <blockhound.version>1.0.0.RC1</blockhound.version>
         <jackson.version>2.9.10</jackson.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>4.13-beta-3</junit.version>
@@ -163,13 +162,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.projectreactor.tools</groupId>
-            <artifactId>blockhound</artifactId>
-            <version>${blockhound.version}</version>
             <scope>test</scope>
         </dependency>
 
