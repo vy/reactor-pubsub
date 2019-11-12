@@ -287,6 +287,40 @@ puller
 
 == F.A.Q
 
+=== How can I avoid stream termination when pull fails?
+
+It is a common pitfall to build a message consumption pipeline as follows:
+
+```java
+puller
+        .pullAll()
+        .concatMap(pullResponse -> businessLogic
+                .execute(pullResponse)
+                .then(Mono.fromCallable(() -> {
+                    List<String> ackIds = pullResponse
+                            .getReceivedAckableMessages()
+                            .stream()
+                            .map(PubsubReceivedAckableMessage::getAckId)
+                            .collect(Collectors.toList());
+                    PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
+                    return acker.ack(ackRequest);
+                }))
+        .subscribe();
+```
+
+Here the `Flux<PubsubPullResponse>` returned by `pullAll()` will be  terminated
+if any of the methods along the reactive chain (`pullAll()`,
+`businessLogic.execute()`, `ack()`, etc.) throws an exception. No matter how
+many `doOnError()`, `onErrorResume()` you plaster there, the damage has been
+done, the subscription has been cancelled, and `pullAll()` will not continue
+pulling anymore. Note that this applies to any
+https://projectreactor.io/docs/core/release/reference/#flux[`Flux`] and nothing
+new to the way we leverage it here. To prevent such premature stream
+termination, you need to retry subscribing. While this can be done as simple as
+calling `retry()`, you might also want to check out more fancy options like
+`retryBackoff()`. As one final remark, make sure you deal (log?) with the error
+prior to retrying.
+
 === How can I retry ack's?
 
 See
