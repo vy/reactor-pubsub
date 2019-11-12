@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 public class StagedRateLimiterReactorDecoratorFactory {
 
-    public static final String DEFAULT_METER_NAME = "pubsub.stagedRateLimiter";
+    public static final String DEFAULT_METER_NAME_PREFIX = "pubsub.stagedRateLimiter";
 
     public static final Map<String, String> DEFAULT_METER_TAGS = Collections.emptyMap();
 
@@ -34,7 +34,7 @@ public class StagedRateLimiterReactorDecoratorFactory {
             permitWaitPeriodDistributions = null;
         } else {
             DistributionSummary.Builder meterBuilder = DistributionSummary
-                    .builder(builder.meterName + ".permitWaitPeriod")
+                    .builder(builder.meterNamePrefix + ".permitWaitPeriod")
                     .tag("type", "summary")
                     .tag("name", stagedRateLimiter.getName());
             builder.meterTags.forEach(meterBuilder::tag);
@@ -101,7 +101,7 @@ public class StagedRateLimiterReactorDecoratorFactory {
         @Nullable
         private MeterRegistry meterRegistry;
 
-        private String meterName = DEFAULT_METER_NAME;
+        private String meterNamePrefix = DEFAULT_METER_NAME_PREFIX;
 
         private Map<String, String> meterTags = DEFAULT_METER_TAGS;
 
@@ -120,8 +120,8 @@ public class StagedRateLimiterReactorDecoratorFactory {
             return this;
         }
 
-        public Builder setMeterName(String meterName) {
-            this.meterName = Objects.requireNonNull(meterName, "meterName");
+        public Builder setMeterNamePrefix(String meterNamePrefix) {
+            this.meterNamePrefix = Objects.requireNonNull(meterNamePrefix, "meterNamePrefix");
             return this;
         }
 

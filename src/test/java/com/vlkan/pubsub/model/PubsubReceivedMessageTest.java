@@ -133,4 +133,14 @@ public class PubsubReceivedMessageTest {
 
     }
 
+    @Test
+    public void test_serialization() {
+        PubsubReceivedMessage message =
+                PubsubReceivedMessageFixture.createRandomReceivedMessage();
+        String messageJson = JacksonHelpers.writeValueAsString(message);
+        PubsubReceivedMessage deserializedMessage =
+                JacksonHelpers.readValue(messageJson, PubsubReceivedMessage.class);
+        Assertions.assertThat(deserializedMessage).isEqualTo(message);
+    }
+
 }

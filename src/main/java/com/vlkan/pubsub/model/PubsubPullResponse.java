@@ -28,6 +28,7 @@ import java.util.Objects;
  */
 public class PubsubPullResponse {
 
+    @JsonProperty(value = "receivedMessages")
     private final List<PubsubReceivedAckableMessage> receivedAckableMessages;
 
     @JsonCreator

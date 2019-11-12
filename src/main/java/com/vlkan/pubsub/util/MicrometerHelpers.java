@@ -33,7 +33,7 @@ public enum MicrometerHelpers {;
             String meterName,
             Map<String, Timer> timerByKey,
             String key,
-            Supplier<String[]> tagSupplier,
+            Function<Boolean, String[]> tagSupplier,
             Mono<T> mono) {
         return Mono
                 .fromCallable(System::nanoTime)
@@ -42,7 +42,7 @@ public enum MicrometerHelpers {;
                             long durationNanos = System.nanoTime() - startInstantNanos;
                             Timer timer = error == null
                                     ? createSuccessTimer(meterRegistry, meterName, timerByKey, key, tagSupplier)
-                                    : createFailureTimer(meterRegistry, meterName, timerByKey, key, tagSupplier, error);
+                                    : createFailureTimer(meterRegistry, meterName, timerByKey, key, tagSupplier);
                             timer.record(durationNanos, TimeUnit.NANOSECONDS);
                         }));
     }
@@ -52,17 +52,11 @@ public enum MicrometerHelpers {;
             String meterName,
             Map<String, Timer> timerByKey,
             String key,
-            Supplier<String[]> tagSupplier) {
+            Function<Boolean, String[]> tagSupplier) {
         String mapKey = key + "/success";
         return timerByKey.computeIfAbsent(mapKey, ignoredKey -> {
-            String[] tags = tagSupplier.get();
-            String[] extendedTags = new String[tags.length + 4];
-            System.arraycopy(tags, 0, extendedTags, 4, tags.length);
-            extendedTags[0] = "type";
-            extendedTags[1] = "timer";
-            extendedTags[2] = "result";
-            extendedTags[3] = "success";
-            return meterRegistry.timer(meterName, extendedTags);
+            String[] tags = tagSupplier.apply(true);
+            return meterRegistry.timer(meterName, tags);
         });
     }
 
@@ -71,24 +65,11 @@ public enum MicrometerHelpers {;
             String meterName,
             Map<String, Timer> timerByKey,
             String key,
-            Supplier<String[]> tagSupplier,
-            Throwable error) {
-        String rootCauseClassName = ThrowableHelpers
-                .findRootCause(error)
-                .getClass()
-                .getSimpleName();
-        String mapKey = key + "/failure/" + rootCauseClassName;
+            Function<Boolean, String[]> tagSupplier) {
+        String mapKey = key + "/failure";
         return timerByKey.computeIfAbsent(mapKey, ignoredKey -> {
-            String[] tags = tagSupplier.get();
-            String[] extendedTags = new String[tags.length + 6];
-            System.arraycopy(tags, 0, extendedTags, 6, tags.length);
-            extendedTags[0] = "type";
-            extendedTags[1] = "timer";
-            extendedTags[2] = "result";
-            extendedTags[3] = "failure";
-            extendedTags[4] = "rootCauseClassName";
-            extendedTags[5] = rootCauseClassName;
-            return meterRegistry.timer(meterName, extendedTags);
+            String[] tags = tagSupplier.apply(false);
+            return meterRegistry.timer(meterName, tags);
         });
     }
 

@@ -50,7 +50,7 @@ me"_), I needed to take some shortcuts to get this project going:
   too. Hence, no need to introduce an extra dependency.] for authentication
 
 - https://github.com/FasterXML/jackson-databind[Jackson]footnote:[https://github.com/googleapis/google-api-java-client[Google
-  APIs Client Library] already depends on this library.] for JSON serialization
+  APIs Client Library] already depends on Jackson.] for JSON serialization
 
 - http://micrometer.io/[Micrometer] for metrics _(optional)_
 
@@ -376,7 +376,7 @@ MeterRegistry meterRegistry = ...;
 PubsubClient
         .builder()
         .setMeterRegistry(meterRegistry)
-        .setMeterName("pubsub.client")                  // default
+        .setMeterNamePrefix("pubsub.client")            // default
         .setMeterTags(Collections.emptyMap())           // default
         // ...
         .build();
@@ -385,7 +385,7 @@ PubsubClient
 StagedRateLimiterReactorDecoratorFactory
         .builder()
         .setMeterRegistry(meterRegistry)
-        .setMeterName("pubsub.stagedRateLimiter")       // default
+        .setMeterNamePrefix("pubsub.stagedRateLimiter") // default
         .setMeterTags(Collections.emptyMap())           // default
         // ...
         .build();
@@ -393,41 +393,41 @@ StagedRateLimiterReactorDecoratorFactory
 
 Above will publish metrics with the following footprints:
 
-|============================
-|Name |Tag |Description
+|===
+|Name |Tags |Description
 
-.20+|`pubsub.client` |`type=timer` .6+|`publish` latency
-|`operation=publish`
-|`projectName=<projectName>`
-|`topicName=<topicName>`
-|`result=<success\|failure>`
-|`[rootCauseClassName=<rootCauseClassName>]`
-|`type=timer` .6+|`pull` and `ack` latency
-|`operation=<pull\|ack>`
-|`projectName=<projectName>`
-|`subscriptionName=<subscriptionName>`
-|`result=<success\|failure>`
-|`[rootCauseClassName=<rootCauseClassName>]`
-|`type=counter` .4+|``publish``ed message count
-|`operation=publish`
-|`projectName=<projectName>`
-|`topicName=<topicName>`
-|`type=counter` .4+|``pull``ed and ``ack``ed message count
-|`operation=<pull\|ack>`
-|`projectName=<projectName>`
-|`subscriptionName=<subscriptionName>`
+|`pubsub.client.publish.latency`
+|`projectName`, `topicName`, `result`
+|`publish` request latency
 
-.2+|`pubsub.stagedRateLimiter.permitWaitPeriod` |`type=summary` .2+|
-|`name=<name>`
-|============================
+|`pubsub.client.publish.count`
+|`projectName`, `topicName`
+|``publish``ed message count
+
+|`pubsub.client.{pull,ack}.latency`
+|`projectName`, `subscriptionName`, `result`
+|`pull` and `ack` request latency
+
+|`pubsub.client.{pull,ack}.count`
+|`projectName`, `subscriptionName`
+|``pulled``ed/``ack``ed message count
+
+|`pubsub.stagedRateLimiter.permitWaitPeriod`
+|`name`
+|permit wait period distribution summary
+|===
 
 There are a couple of details that need further elaboration here:
 
-- `PubsubPuller#pullAll()` repeatedly executes `pull` requests such that if the
-  previous `pull` has returned an empty response, the next `pull` gets delayed
-  by `PubsubPullerConfig#pullPeriod`. Hence the published
-  `pubsub.client{type=timer,operation=pull}` metrics are a combination of both
-  the full and the empty responses.
+- When `PubsubPullerConfig#pullPeriod` is set to zero (default), `pull` requests
+  will only get completed when there are messages. Hence, one might experience
+  high latencies in queues that frequently become empty.
+
+- When `PubsubPullerConfig#pullPeriod` is set to a value greater than zero,
+  repeatedly executed `pull` requests by `PubsubPuller#pullAll()` will get
+  followed by a `pullPeriod` delay after an empty response. Hence the published
+  `pubsub.client.pull.latency` metrics are a combination of both the full and
+  the empty responses.
 
 - As of this writing, Pub/Sub blocks every `pull` requests at least ~1.5 seconds
   before returning an empty response.
@@ -521,6 +521,7 @@ configure and use the god damn rate limiter.
 
 - https://github.com/berkaybuharali[Berkay Buharalı]
 - https://github.com/bsideup[Sergei Egorov]
+- https://github.com/luiccn[Luiz Neto]
 
 == License
 

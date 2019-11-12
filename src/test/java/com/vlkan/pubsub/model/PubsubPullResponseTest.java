@@ -7,7 +7,11 @@ import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class PubsubPullResponseTest {
 
@@ -79,6 +83,15 @@ public class PubsubPullResponseTest {
         // Compare the content.
         Assertions.assertThat(actualResponse).isEqualTo(expectedResponse);
 
+    }
+
+    @Test
+    public void test_serialization() {
+        PubsubPullResponse pullResponse = PubsubPullResponseFixture.createRandomPullResponse(30);
+        String pullResponseJson = JacksonHelpers.writeValueAsString(pullResponse);
+        PubsubPullResponse deserializedPullResponse =
+                JacksonHelpers.readValue(pullResponseJson, PubsubPullResponse.class);
+        Assertions.assertThat(deserializedPullResponse).isEqualTo(pullResponse);
     }
 
 }

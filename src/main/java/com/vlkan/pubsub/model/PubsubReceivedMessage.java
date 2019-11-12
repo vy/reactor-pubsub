@@ -19,22 +19,30 @@ package com.vlkan.pubsub.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vlkan.pubsub.jackson.JacksonBase64EncodedStringDeserializer;
+import com.vlkan.pubsub.jackson.JacksonBase64EncodedStringSerializer;
 import com.vlkan.pubsub.jackson.JacksonInstantDeserializer;
+import com.vlkan.pubsub.jackson.JacksonInstantSerializer;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Jackson-deserializable Pub/Sub received message model.
+ * Jackson-(de)serializable Pub/Sub received message model.
  */
 public class PubsubReceivedMessage {
 
+    @JsonProperty(value = "publishTime", required = true)
+    @JsonSerialize(using = JacksonInstantSerializer.class)
     private final Instant publishInstant;
 
+    @JsonProperty(value = "messageId", required = true)
     private final String id;
 
+    @JsonProperty(value = "data", required = true)
+    @JsonSerialize(using = JacksonBase64EncodedStringSerializer.class)
     private final byte[] payload;
 
     @JsonCreator

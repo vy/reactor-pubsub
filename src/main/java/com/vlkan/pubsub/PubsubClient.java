@@ -18,7 +18,11 @@ package com.vlkan.pubsub;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vlkan.pubsub.model.*;
+import com.vlkan.pubsub.model.PubsubAckRequest;
+import com.vlkan.pubsub.model.PubsubPublishRequest;
+import com.vlkan.pubsub.model.PubsubPublishResponse;
+import com.vlkan.pubsub.model.PubsubPullRequest;
+import com.vlkan.pubsub.model.PubsubPullResponse;
 import com.vlkan.pubsub.util.MicrometerHelpers;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -27,9 +31,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import reactor.core.publisher.Mono;
+import reactor.netty.ByteBufMono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.http.client.HttpClientResponse;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -38,7 +45,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 public class PubsubClient {
 
@@ -75,7 +82,7 @@ public class PubsubClient {
         return DefaultInstanceHolder.INSTANCE;
     }
 
-    public static final String DEFAULT_METER_NAME = "pubsub.client";
+    public static final String DEFAULT_METER_NAME_PREFIX = "pubsub.client";
 
     public static final Map<String, String> DEFAULT_METER_TAGS = Collections.emptyMap();
 
@@ -90,7 +97,7 @@ public class PubsubClient {
     @Nullable
     private final MeterRegistry meterRegistry;
 
-    private final String meterName;
+    private final String meterNamePrefix;
 
     private final Map<String, String> meterTags;
 
@@ -114,7 +121,7 @@ public class PubsubClient {
             this.timerByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
             this.counterByRequestUrl = Collections.synchronizedMap(new WeakHashMap<>());
         }
-        this.meterName = builder.meterName;
+        this.meterNamePrefix = builder.meterNamePrefix;
         this.meterTags = builder.meterTags;
     }
 
@@ -140,24 +147,22 @@ public class PubsubClient {
             PubsubPullRequest pullRequest,
             String requestUrl,
             Duration timeout) {
-        Supplier<String[]> tagSupplier = createMeterTagSupplier(
-                "operation", "pull",
-                "projectName", projectName,
-                "subscriptionName", subscriptionName);
+        Function<Boolean, String[]> meterTagSupplier =
+                createMeterTagSupplier(projectName, "subscriptionName", subscriptionName);
         return executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, timeout)
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".pull.latency",
                         timerByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        meterTagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".pull.count",
                         counterByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        () -> meterTagSupplier.apply(true),
                         pullResponse -> pullResponse.getReceivedAckableMessages().size(),
                         mono));
     }
@@ -180,24 +185,22 @@ public class PubsubClient {
             String subscriptionName,
             PubsubAckRequest ackRequest,
             String requestUrl) {
-        Supplier<String[]> tagSupplier = createMeterTagSupplier(
-                "operation", "ack",
-                "projectName", projectName,
-                "subscriptionName", subscriptionName);
+        Function<Boolean, String[]> meterTagSupplier =
+                createMeterTagSupplier(projectName, "subscriptionName", subscriptionName);
         return executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".ack.latency",
                         timerByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        meterTagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".ack.count",
                         counterByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        () -> meterTagSupplier.apply(true),
                         ignored -> ackRequest.getAckIds().size(),
                         mono));
     }
@@ -220,32 +223,62 @@ public class PubsubClient {
             String topicName,
             PubsubPublishRequest publishRequest,
             String requestUrl) {
-        Supplier<String[]> tagSupplier = createMeterTagSupplier(
-                "operation", "publish",
-                "projectName", projectName,
-                "topicName", topicName);
+        Function<Boolean, String[]> meterTagSupplier =
+                createMeterTagSupplier(projectName, "topicName", topicName);
         return executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
                 .transform(mono -> MicrometerHelpers.measureLatency(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".publish.latency",
                         timerByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        meterTagSupplier,
                         mono))
                 .transform(mono -> MicrometerHelpers.measureCount(
                         meterRegistry,
-                        meterName,
+                        meterNamePrefix + ".publish.count",
                         counterByRequestUrl,
                         requestUrl,
-                        tagSupplier,
+                        () -> meterTagSupplier.apply(true),
                         ignored -> publishRequest.getMessages().size(),
                         mono));
+    }
+
+    private Function<Boolean, String[]> createMeterTagSupplier(
+            String projectName,
+            String extensionKey,
+            String extensionValue) {
+        return result -> {
+            if (result) {
+                return extendMeterTags(
+                        "type", "timer",
+                        "projectName", projectName,
+                        extensionKey, extensionValue,
+                        "result", "success");
+            } else {
+                return extendMeterTags(
+                        "type", "timer",
+                        "projectName", projectName,
+                        extensionKey, extensionValue,
+                        "result", "failure");
+            }
+        };
+    }
+
+    private String[] extendMeterTags(String... extensionTags) {
+        String[] tags = new String[extensionTags.length + meterTags.size() * 2];
+        System.arraycopy(extensionTags, 0, tags, 0, extensionTags.length);
+        int[] i = {extensionTags.length};
+        meterTags.forEach((tagName, tagValue) -> {
+            tags[i[0]++] = tagName;
+            tags[i[0]++] = tagValue;
+        });
+        return tags;
     }
 
     private <T> Mono<T> executeRequest(
             String requestUrl,
             Object requestPayload,
-            Class<T> responseClass,
+            Class<T> responsePayloadClass,
             Duration timeout) {
         Mono<ByteBuf> requestPayloadByteBufMono = Mono
                 .fromCallable(() -> serializeRequestPayload(requestPayload))
@@ -253,50 +286,51 @@ public class PubsubClient {
         return Mono
                 .fromCallable(() -> String.format("Bearer %s", accessTokenCache.getAccessToken()))
                 .flatMap(authorizationHeaderValue -> httpClient
-                        .headers(headers -> {
-                            headers
-                                    .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON)
-                                    .set(HttpHeaderNames.AUTHORIZATION, authorizationHeaderValue);
-                            @Nullable String userAgent = config.getUserAgent();
-                            if (userAgent != null) {
-                                headers.set(HttpHeaderNames.USER_AGENT, userAgent);
-                            }
-                        })
+                        .headers(headers -> setRequestHeaders(headers, authorizationHeaderValue))
                         .post()
                         .uri(requestUrl)
                         .send(requestPayloadByteBufMono)
-                        .responseSingle((response, responsePayloadByteBufMono) -> {
-                            HttpResponseStatus responseStatus = response.status();
-                            if (!is2xxSuccessful(responseStatus)) {
-                                String message = String.format("unexpected response (responseStatus=%s)", responseStatus);
-                                throw new RuntimeException(message);
-                            }
-                            return responsePayloadByteBufMono
-                                    .asByteArray()
-                                    .flatMap(responsePayloadBytes -> {
-                                        @Nullable T responsePayload = deserializeResponsePayload(responsePayloadBytes, responseClass);
-                                        return responsePayload != null
-                                                ? Mono.just(responsePayload)
-                                                : Mono.empty();
-                                    })
-                                    .checkpoint("deserializeResponsePayload");
-                        })
+                        .responseSingle((response, responsePayloadByteBufMono) ->
+                                handleResponse(responsePayloadClass, response, responsePayloadByteBufMono))
                         .transform(responseMono -> Duration.ZERO.equals(timeout)
                                 ? responseMono
                                 : responseMono.timeout(timeout)));
     }
 
-    private Supplier<String[]> createMeterTagSupplier(String... extensionTags) {
-        return () -> {
-            String[] tags = new String[extensionTags.length + meterTags.size() * 2];
-            System.arraycopy(extensionTags, 0, tags, 0, extensionTags.length);
-            int[] i = {extensionTags.length};
-            meterTags.forEach((tagName, tagValue) -> {
-                tags[i[0]++] = tagName;
-                tags[i[0]++] = tagValue;
-            });
-            return tags;
-        };
+    private void setRequestHeaders(HttpHeaders headers, String authorizationHeaderValue) {
+        headers
+                .set(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON)
+                .set(HttpHeaderNames.AUTHORIZATION, authorizationHeaderValue);
+        @Nullable String userAgent = config.getUserAgent();
+        if (userAgent != null) {
+            headers.set(HttpHeaderNames.USER_AGENT, userAgent);
+        }
+    }
+
+    private <T> Mono<T> handleResponse(
+            Class<T> responsePayloadClass,
+            HttpClientResponse response,
+            ByteBufMono responsePayloadByteBufMono) {
+
+        // Check the response status.
+        HttpResponseStatus responseStatus = response.status();
+        if (!is2xxSuccessful(responseStatus)) {
+            String message = String.format("unexpected response (responseStatus=%s)", responseStatus);
+            throw new RuntimeException(message);
+        }
+
+        // Deserialize the response payload.
+        return responsePayloadByteBufMono
+                .asByteArray()
+                .flatMap(responsePayloadBytes -> {
+                    @Nullable T responsePayload =
+                            deserializeResponsePayload(responsePayloadBytes, responsePayloadClass);
+                    return responsePayload != null
+                            ? Mono.just(responsePayload)
+                            : Mono.empty();
+                })
+                .checkpoint("deserializeResponsePayload");
+
     }
 
     private static boolean is2xxSuccessful(HttpResponseStatus status) {
@@ -352,7 +386,7 @@ public class PubsubClient {
         @Nullable
         private MeterRegistry meterRegistry;
 
-        private String meterName = DEFAULT_METER_NAME;
+        private String meterNamePrefix = DEFAULT_METER_NAME_PREFIX;
 
         private Map<String, String> meterTags = DEFAULT_METER_TAGS;
 
@@ -384,8 +418,8 @@ public class PubsubClient {
             return this;
         }
 
-        public Builder setMeterName(String meterName) {
-            this.meterName = Objects.requireNonNull(meterName, "meterName");
+        public Builder setMeterNamePrefix(String meterNamePrefix) {
+            this.meterNamePrefix = Objects.requireNonNull(meterNamePrefix, "meterNamePrefix");
             return this;
         }
 

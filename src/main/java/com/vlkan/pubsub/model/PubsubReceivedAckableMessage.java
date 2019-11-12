@@ -22,12 +22,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
- * Jackson-deserializable Pub/Sub received (ack'able) message model.
+ * Jackson-(de)serializable Pub/Sub received (ack'able) message model.
  */
 public class PubsubReceivedAckableMessage {
 
+    @JsonProperty(value = "ackId", required = true)
     private final String ackId;
 
+    @JsonProperty(value = "message", required = true)
     private final PubsubReceivedMessage message;
 
     @JsonCreator

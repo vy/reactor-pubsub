@@ -52,4 +52,14 @@ public class PubsubPublishResponseTest {
         Assertions.assertThat(actualMessageIds).isEqualTo(expectedMessageIds);
     }
 
+    @Test
+    public void test_serialization() {
+        PubsubPublishResponse response =
+                new PubsubPublishResponse(Arrays.asList("message1", "message2"));
+        String responseJson = JacksonHelpers.writeValueAsString(response);
+        PubsubPublishResponse deserializedResponse =
+                JacksonHelpers.readValue(responseJson, PubsubPublishResponse.class);
+        Assertions.assertThat(deserializedResponse).isEqualTo(response);
+    }
+
 }

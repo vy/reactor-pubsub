@@ -79,4 +79,14 @@ public class PubsubReceivedAckableMessageTest {
 
     }
 
+    @Test
+    public void test_serialization() {
+        PubsubReceivedAckableMessage ackableMessage =
+                PubsubReceivedAckableMessageFixture.createRandomReceivedAckableMessage();
+        String ackableMessageJson = JacksonHelpers.writeValueAsString(ackableMessage);
+        PubsubReceivedAckableMessage deserializedAckableMessage =
+                JacksonHelpers.readValue(ackableMessageJson, PubsubReceivedAckableMessage.class);
+        Assertions.assertThat(deserializedAckableMessage).isEqualTo(ackableMessage);
+    }
+
 }

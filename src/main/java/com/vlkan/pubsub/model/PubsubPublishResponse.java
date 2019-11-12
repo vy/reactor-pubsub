@@ -25,10 +25,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Jackson-deserializable Pub/Sub publish response model.
+ * Jackson-(de)serializable Pub/Sub publish response model.
  */
 public class PubsubPublishResponse {
 
+    @JsonProperty
     private final List<String> messageIds;
 
     @JsonCreator
