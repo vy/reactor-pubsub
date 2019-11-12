@@ -5,7 +5,7 @@
 
     <groupId>com.vlkan</groupId>
     <artifactId>reactor-pubsub</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2-SNAPSHOT</version>
 
     <name>Reactive Google Cloud Pub/Sub driver with Reactor</name>
     <description>
@@ -42,7 +42,7 @@
         <url>http://github.com/vy/reactor-pubsub</url>
         <connection>scm:git:git@github.com:vy/reactor-pubsub.git</connection>
         <developerConnection>scm:git:git@github.com:vy/reactor-pubsub.git</developerConnection>
-        <tag>v0.1.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
