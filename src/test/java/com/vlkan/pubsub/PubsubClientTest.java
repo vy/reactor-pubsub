@@ -23,7 +23,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class PubsubClientTest {
@@ -215,6 +217,96 @@ public class PubsubClientTest {
         // If we would have had a discrepancy between tags for each distinct
         // meter name, Prometheus meter registry would have thrown an error.
         // Coming this far indicates that no such discrepancy has occurred.
+
+    }
+
+    @Test
+    public void test_pull_timeout_with_returnImmediateEnabled_true() {
+
+        // Create Pub/Sub client.
+        Duration pullTimeout = Duration.ofMillis(100);
+        PubsubClientConfig clientConfig = PubsubClientConfig
+                .builder()
+                .setBaseUrl(serverMockRule.baseUrl())
+                .setPullTimeout(pullTimeout)
+                .build();
+        PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCacheFixture.getInstance();
+        PubsubClient client = PubsubClient
+                .builder()
+                .setConfig(clientConfig)
+                .setAccessTokenCache(accessTokenCache)
+                .build();
+
+        // Stub pull response.
+        String pullResponseJson = JacksonHelpers.writeValueAsString(PULL_RESPONSE);
+        int responseDelayMillis = Math.toIntExact(pullTimeout.toMillis()) * 2;
+        serverMockRule.addStubMapping(
+                WireMock.stubFor(WireMock
+                        .post(WireMock.urlEqualTo(PULL_REQUEST_URL))
+                        .willReturn(WireMock
+                                .aResponse()
+                                .withFixedDelay(responseDelayMillis)
+                                .withHeader(
+                                        HttpHeaderNames.CONTENT_TYPE.toString(),
+                                        HttpHeaderValues.APPLICATION_JSON.toString())
+                                .withBody(pullResponseJson))));
+
+        // Verify the timeout exception.
+        Assertions
+                .assertThatThrownBy(() -> client
+                        .pull(PROJECT_NAME,
+                                SUBSCRIPTION_NAME,
+                                // Note that the PubsubPullRequest#returnImmediateEnabled
+                                // is ignored in the stub mapping. Hence, any any
+                                // serializable request payload would do the work here.
+                                PULL_REQUEST)
+                        .block(Duration.ofSeconds(1)))
+                .hasCauseInstanceOf(TimeoutException.class)
+                .hasMessageContaining("Did not observe any item or terminal signal within");
+
+    }
+
+    @Test
+    public void test_pull_timeout_with_returnImmediateEnabled_false() {
+
+        // Create Pub/Sub client.
+        Duration pullTimeout = Duration.ZERO;
+        PubsubClientConfig clientConfig = PubsubClientConfig
+                .builder()
+                .setBaseUrl(serverMockRule.baseUrl())
+                .setPullTimeout(pullTimeout)
+                .build();
+        PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCacheFixture.getInstance();
+        PubsubClient client = PubsubClient
+                .builder()
+                .setConfig(clientConfig)
+                .setAccessTokenCache(accessTokenCache)
+                .build();
+
+        // Stub pull response.
+        String pullResponseJson = JacksonHelpers.writeValueAsString(PULL_RESPONSE);
+        int responseDelayMillis = 100;
+        serverMockRule.addStubMapping(
+                WireMock.stubFor(WireMock
+                        .post(WireMock.urlEqualTo(PULL_REQUEST_URL))
+                        .willReturn(WireMock
+                                .aResponse()
+                                .withFixedDelay(responseDelayMillis)
+                                .withHeader(
+                                        HttpHeaderNames.CONTENT_TYPE.toString(),
+                                        HttpHeaderValues.APPLICATION_JSON.toString())
+                                .withBody(pullResponseJson))));
+
+        // Verify the timeout exception.
+        @Nullable PubsubPullResponse pullResponse = client
+                .pull(PROJECT_NAME,
+                        SUBSCRIPTION_NAME,
+                        // Note that the PubsubPullRequest#returnImmediateEnabled
+                        // is ignored in the stub mapping. Hence, any any
+                        // serializable request payload would do the work here.
+                        PULL_REQUEST)
+                .block(Duration.ofSeconds(1));
+        Assertions.assertThat(pullResponse).isEqualTo(PULL_RESPONSE);
 
     }
 
