@@ -1,7 +1,6 @@
 package com.vlkan.pubsub.model;
 
-import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vlkan.pubsub.jackson.JacksonHelpers;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -20,7 +19,7 @@ public class PubsubPublishResponseTest {
                     String json = "{}";
                     JacksonHelpers.readValue(json, PubsubPublishResponse.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'messageIds'");
     }
 
@@ -31,7 +30,7 @@ public class PubsubPublishResponseTest {
                     String json = "{\"" + PubsubPublishResponse.JsonFieldName.MESSAGE_IDS + "\": null}";
                     JacksonHelpers.readValue(json, PubsubPublishResponse.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: messageIds");
     }
 
@@ -42,7 +41,7 @@ public class PubsubPublishResponseTest {
                     String json = "{\"" + PubsubPublishResponse.JsonFieldName.MESSAGE_IDS + "\": []}";
                     JacksonHelpers.readValue(json, PubsubPublishResponse.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: emtpy messageIds");
     }
 

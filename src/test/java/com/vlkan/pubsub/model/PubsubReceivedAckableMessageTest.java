@@ -1,7 +1,6 @@
 package com.vlkan.pubsub.model;
 
-import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vlkan.pubsub.MapHelpers;
 import com.vlkan.pubsub.jackson.JacksonHelpers;
 import org.assertj.core.api.Assertions;
@@ -21,7 +20,7 @@ public class PubsubReceivedAckableMessageTest {
                     String json = "{}";
                     JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'ackId'");
     }
 
@@ -35,7 +34,7 @@ public class PubsubReceivedAckableMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: ackId");
     }
 
@@ -46,7 +45,7 @@ public class PubsubReceivedAckableMessageTest {
                     String json = "{\"" + PubsubReceivedAckableMessage.JsonFieldName.ACK_ID + "\": \"id1\"}";
                     JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'message'");
     }
 
@@ -60,7 +59,7 @@ public class PubsubReceivedAckableMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: message");
     }
 

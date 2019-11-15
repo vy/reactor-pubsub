@@ -1,7 +1,6 @@
 package com.vlkan.pubsub.model;
 
-import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.vlkan.pubsub.MapHelpers;
 import com.vlkan.pubsub.jackson.JacksonHelpers;
 import org.assertj.core.api.Assertions;
@@ -32,7 +31,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'publishTime'");
     }
 
@@ -47,7 +46,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: publishInstant");
     }
 
@@ -61,7 +60,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'messageId'");
     }
 
@@ -76,7 +75,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: id");
     }
 
@@ -90,7 +89,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(MismatchedInputException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("Missing required creator property 'data'");
     }
 
@@ -105,7 +104,7 @@ public class PubsubReceivedMessageTest {
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
-                .hasCauseInstanceOf(InvalidDefinitionException.class)
+                .hasCauseInstanceOf(JsonMappingException.class)
                 .hasMessageContaining("problem: payload");
     }
 
