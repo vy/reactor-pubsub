@@ -36,31 +36,43 @@ import java.util.Objects;
  */
 public class PubsubReceivedMessage {
 
-    @JsonProperty(value = "publishTime", required = true)
+    enum JsonFieldName {;
+
+        static final String PUBLISH_INSTANT = "publishTime";
+
+        static final String ID = "messageId";
+
+        static final String PAYLOAD = "data";
+
+        static final String ATTRIBUTES = "attributes";
+
+    }
+
+    @JsonProperty(JsonFieldName.PUBLISH_INSTANT)
     @JsonSerialize(using = JacksonInstantSerializer.class)
     private final Instant publishInstant;
 
-    @JsonProperty(value = "messageId", required = true)
+    @JsonProperty(JsonFieldName.ID)
     private final String id;
 
-    @JsonProperty(value = "data", required = true)
+    @JsonProperty(JsonFieldName.PAYLOAD)
     @JsonSerialize(using = JacksonBase64EncodedStringSerializer.class)
     private final byte[] payload;
 
-    @JsonProperty
+    @JsonProperty(JsonFieldName.ATTRIBUTES)
     private final Map<String, String> attributes;
 
     @JsonCreator
     public PubsubReceivedMessage(
-            @JsonProperty(value = "publishTime", required = true)
+            @JsonProperty(value = JsonFieldName.PUBLISH_INSTANT, required = true)
             @JsonDeserialize(using = JacksonInstantDeserializer.class)
                     Instant publishInstant,
-            @JsonProperty(value = "messageId", required = true)
+            @JsonProperty(value = JsonFieldName.ID, required = true)
                     String id,
-            @JsonProperty(value = "data", required = true)
+            @JsonProperty(value = JsonFieldName.PAYLOAD, required = true)
             @JsonDeserialize(using = JacksonBase64EncodedStringDeserializer.class)
                     byte[] payload,
-            @JsonProperty(value = "attributes")
+            @JsonProperty(JsonFieldName.ATTRIBUTES)
                     Map<String, String> attributes) {
         this.publishInstant = Objects.requireNonNull(publishInstant, "publishInstant");
         this.id = Objects.requireNonNull(id, "id");

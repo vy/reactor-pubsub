@@ -29,11 +29,19 @@ import java.util.stream.Stream;
  */
 public class PubsubPublishResponse {
 
-    @JsonProperty
+    enum JsonFieldName {;
+
+        static final String MESSAGE_IDS = "messageIds";
+
+    }
+
+    @JsonProperty(JsonFieldName.MESSAGE_IDS)
     private final List<String> messageIds;
 
     @JsonCreator
-    public PubsubPublishResponse(@JsonProperty(value = "messageIds", required = true) List<String> messageIds) {
+    public PubsubPublishResponse(
+            @JsonProperty(value = JsonFieldName.MESSAGE_IDS, required = true)
+                    List<String> messageIds) {
         Objects.requireNonNull(messageIds, "messageIds");
         if (messageIds.isEmpty()) {
             throw new IllegalArgumentException("emtpy messageIds");

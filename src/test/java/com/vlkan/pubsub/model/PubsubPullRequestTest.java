@@ -24,8 +24,8 @@ public class PubsubPullRequestTest {
         int maxMessageCount = 1;
         for (boolean immediateReturnEnabled : new boolean[]{false, true}) {
             Map<String, Object> expectedRequestMap = new LinkedHashMap<>();
-            expectedRequestMap.put("returnImmediately", immediateReturnEnabled);
-            expectedRequestMap.put("maxMessages", maxMessageCount);
+            expectedRequestMap.put(PubsubPullRequest.JsonFieldName.IMMEDIATE_RETURN_ENABLED, immediateReturnEnabled);
+            expectedRequestMap.put(PubsubPullRequest.JsonFieldName.MAX_MESSAGE_COUNT, maxMessageCount);
             PubsubPullRequest request = new PubsubPullRequest(immediateReturnEnabled, maxMessageCount);
             Map<String, Object> actualRequestMap = JacksonHelpers.writeValueAsMap(request);
             Assertions.assertThat(actualRequestMap).isEqualTo(expectedRequestMap);

@@ -26,16 +26,24 @@ import java.util.Objects;
  */
 public class PubsubReceivedAckableMessage {
 
-    @JsonProperty(value = "ackId", required = true)
+    enum JsonFieldName {;
+
+        static final String ACK_ID = "ackId";
+
+        static final String MESSAGE = "message";
+
+    }
+
+    @JsonProperty(value = JsonFieldName.ACK_ID)
     private final String ackId;
 
-    @JsonProperty(value = "message", required = true)
+    @JsonProperty(value = JsonFieldName.MESSAGE)
     private final PubsubReceivedMessage message;
 
     @JsonCreator
     public PubsubReceivedAckableMessage(
-            @JsonProperty(value = "ackId", required = true) String ackId,
-            @JsonProperty(value = "message", required = true) PubsubReceivedMessage message) {
+            @JsonProperty(value = JsonFieldName.ACK_ID, required = true) String ackId,
+            @JsonProperty(value = JsonFieldName.MESSAGE, required = true) PubsubReceivedMessage message) {
         this.ackId = Objects.requireNonNull(ackId, "ackId");
         this.message = Objects.requireNonNull(message, "message");
     }

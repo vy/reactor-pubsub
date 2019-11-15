@@ -30,11 +30,19 @@ import java.util.Objects;
  */
 public class PubsubDraftedMessage {
 
-    @JsonProperty("data")
+    enum JsonFieldName {;
+
+        static final String PAYLOAD = "data";
+
+        static final String ATTRIBUTES = "attributes";
+
+    }
+
+    @JsonProperty(JsonFieldName.PAYLOAD)
     @JsonSerialize(using = JacksonBase64EncodedStringSerializer.class)
     private final byte[] payload;
 
-    @JsonProperty
+    @JsonProperty(JsonFieldName.ATTRIBUTES)
     private final Map<String, String> attributes;
 
     public PubsubDraftedMessage(byte[] payload) {
@@ -42,10 +50,8 @@ public class PubsubDraftedMessage {
     }
 
     public PubsubDraftedMessage(byte[] payload, Map<String, String> attributes) {
-        Objects.requireNonNull(payload, "payload");
-        Objects.requireNonNull(attributes, "attributes");
-        this.payload = payload;
-        this.attributes = attributes;
+        this.payload = Objects.requireNonNull(payload, "payload");
+        this.attributes = Objects.requireNonNull(attributes, "attributes");
     }
 
     public byte[] getPayload() {

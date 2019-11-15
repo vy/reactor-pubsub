@@ -35,7 +35,7 @@ public class PubsubPublishRequestTest {
         PubsubPublishRequest request = new PubsubPublishRequest(messages);
         Map<String, Object> actualRequestMap = JacksonHelpers.writeValueAsMap(request);
         Map<String, Object> expectedRequestMap = Collections.singletonMap(
-                "messages",
+                PubsubPublishRequest.JsonFieldName.MESSAGES,
                 messages.stream()
                         .map(JacksonHelpers::writeValueAsMap)
                         .collect(Collectors.toList()));

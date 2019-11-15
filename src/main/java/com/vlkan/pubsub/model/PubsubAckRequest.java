@@ -28,7 +28,13 @@ import java.util.stream.Stream;
  */
 public class PubsubAckRequest {
 
-    @JsonProperty
+    enum JsonFieldName {;
+
+        static final String ACK_IDS = "ackIds";
+
+    }
+
+    @JsonProperty(JsonFieldName.ACK_IDS)
     private final List<String> ackIds;
 
     public PubsubAckRequest(List<String> ackIds) {

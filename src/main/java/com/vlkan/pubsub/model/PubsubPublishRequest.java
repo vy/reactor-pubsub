@@ -26,7 +26,13 @@ import java.util.Objects;
  */
 public class PubsubPublishRequest {
 
-    @JsonProperty
+    enum JsonFieldName {;
+
+        static final String MESSAGES = "messages";
+
+    }
+
+    @JsonProperty(JsonFieldName.MESSAGES)
     private final List<PubsubDraftedMessage> messages;
 
     public PubsubPublishRequest(List<PubsubDraftedMessage> messages) {

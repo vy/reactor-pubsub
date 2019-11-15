@@ -16,8 +16,10 @@ public class PubsubPublishResponseTest {
     @Test
     public void test_deserialization_with_empty_json() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{}", PubsubPublishResponse.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{}";
+                    JacksonHelpers.readValue(json, PubsubPublishResponse.class);
+                })
                 .hasCauseInstanceOf(MismatchedInputException.class)
                 .hasMessageContaining("Missing required creator property 'messageIds'");
     }
@@ -25,8 +27,10 @@ public class PubsubPublishResponseTest {
     @Test
     public void test_deserialization_with_null_messageIds() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{\"messageIds\": null}", PubsubPublishResponse.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{\"" + PubsubPublishResponse.JsonFieldName.MESSAGE_IDS + "\": null}";
+                    JacksonHelpers.readValue(json, PubsubPublishResponse.class);
+                })
                 .hasCauseInstanceOf(InvalidDefinitionException.class)
                 .hasMessageContaining("problem: messageIds");
     }
@@ -34,8 +38,10 @@ public class PubsubPublishResponseTest {
     @Test
     public void test_deserialization_with_empty_messageIds() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{\"messageIds\": []}", PubsubPublishResponse.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{\"" + PubsubPublishResponse.JsonFieldName.MESSAGE_IDS + "\": []}";
+                    JacksonHelpers.readValue(json, PubsubPublishResponse.class);
+                })
                 .hasCauseInstanceOf(InvalidDefinitionException.class)
                 .hasMessageContaining("problem: emtpy messageIds");
     }
@@ -43,8 +49,9 @@ public class PubsubPublishResponseTest {
     @Test
     public void test_deserialization() {
         List<String> expectedMessageIds = Arrays.asList("id1", "id2");
-        Map<String, Object> expectedResponseMap =
-                Collections.singletonMap("messageIds", expectedMessageIds);
+        Map<String, Object> expectedResponseMap = Collections.singletonMap(
+                PubsubPublishResponse.JsonFieldName.MESSAGE_IDS,
+                expectedMessageIds);
         String responseJson = JacksonHelpers.writeValueAsString(expectedResponseMap);
         PubsubPublishResponse actualResponse =
                 JacksonHelpers.readValue(responseJson, PubsubPublishResponse.class);

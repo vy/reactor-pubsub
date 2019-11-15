@@ -28,12 +28,19 @@ import java.util.Objects;
  */
 public class PubsubPullResponse {
 
-    @JsonProperty(value = "receivedMessages")
+    enum JsonFieldName {;
+
+        static final String RECEIVED_ACKABLE_MESSAGES = "receivedMessages";
+
+    }
+
+    @JsonProperty(JsonFieldName.RECEIVED_ACKABLE_MESSAGES)
     private final List<PubsubReceivedAckableMessage> receivedAckableMessages;
 
     @JsonCreator
     public PubsubPullResponse(
-            @JsonProperty(value = "receivedMessages") List<PubsubReceivedAckableMessage> receivedAckableMessages) {
+            @JsonProperty(JsonFieldName.RECEIVED_ACKABLE_MESSAGES)
+                    List<PubsubReceivedAckableMessage> receivedAckableMessages) {
         this.receivedAckableMessages = receivedAckableMessages != null
                 ? receivedAckableMessages
                 : Collections.emptyList();

@@ -31,7 +31,8 @@ public class PubsubAckRequestTest {
         List<String> ackIds = Collections.singletonList("some-ack-id");
         PubsubAckRequest request = new PubsubAckRequest(ackIds);
         Map<String, Object> actualRequestMap = JacksonHelpers.writeValueAsMap(request);
-        Map<String, Object> expectedRequestMap = Collections.singletonMap("ackIds", ackIds);
+        Map<String, Object> expectedRequestMap = Collections.singletonMap(
+                PubsubAckRequest.JsonFieldName.ACK_IDS, ackIds);
         Assertions.assertThat(actualRequestMap).isEqualTo(expectedRequestMap);
     }
 

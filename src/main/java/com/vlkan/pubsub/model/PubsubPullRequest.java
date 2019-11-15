@@ -25,10 +25,18 @@ import java.util.Objects;
  */
 public class PubsubPullRequest {
 
-    @JsonProperty("returnImmediately")
+    enum JsonFieldName {;
+
+        static final String IMMEDIATE_RETURN_ENABLED = "returnImmediately";
+
+        static final String MAX_MESSAGE_COUNT = "maxMessages";
+
+    }
+
+    @JsonProperty(JsonFieldName.IMMEDIATE_RETURN_ENABLED)
     private final boolean immediateReturnEnabled;
 
-    @JsonProperty("maxMessages")
+    @JsonProperty(JsonFieldName.MAX_MESSAGE_COUNT)
     private final int maxMessageCount;
 
     public PubsubPullRequest(boolean immediateReturnEnabled, int maxMessageCount) {

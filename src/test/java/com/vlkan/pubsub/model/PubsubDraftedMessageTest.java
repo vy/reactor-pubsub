@@ -34,8 +34,12 @@ public class PubsubDraftedMessageTest {
         PubsubDraftedMessage message = new PubsubDraftedMessage(payload, attributes);
         Map<String, Object> actualMessageMap = JacksonHelpers.writeValueAsMap(message);
         Map<String, Object> expectedMessageMap = new LinkedHashMap<>();
-        expectedMessageMap.put("data", Base64.getEncoder().encodeToString(payload));
-        expectedMessageMap.put("attributes", attributes);
+        expectedMessageMap.put(
+                PubsubDraftedMessage.JsonFieldName.PAYLOAD,
+                Base64.getEncoder().encodeToString(payload));
+        expectedMessageMap.put(
+                PubsubDraftedMessage.JsonFieldName.ATTRIBUTES,
+                attributes);
         Assertions.assertThat(actualMessageMap).isEqualTo(expectedMessageMap);
     }
 

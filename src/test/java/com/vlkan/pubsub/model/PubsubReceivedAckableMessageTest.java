@@ -17,8 +17,10 @@ public class PubsubReceivedAckableMessageTest {
     @Test
     public void test_deserialization_with_empty_ackId() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{}", PubsubReceivedAckableMessage.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{}";
+                    JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
+                })
                 .hasCauseInstanceOf(MismatchedInputException.class)
                 .hasMessageContaining("Missing required creator property 'ackId'");
     }
@@ -26,8 +28,13 @@ public class PubsubReceivedAckableMessageTest {
     @Test
     public void test_deserialization_with_null_ackId() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{\"ackId\": null, \"message\": null}", PubsubReceivedAckableMessage.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{" +
+                            '"' + PubsubReceivedAckableMessage.JsonFieldName.ACK_ID + "\": null" +
+                            ", \"" + PubsubReceivedAckableMessage.JsonFieldName.MESSAGE + "\": null" +
+                            '}';
+                    JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
+                })
                 .hasCauseInstanceOf(InvalidDefinitionException.class)
                 .hasMessageContaining("problem: ackId");
     }
@@ -35,8 +42,10 @@ public class PubsubReceivedAckableMessageTest {
     @Test
     public void test_deserialization_with_empty_message() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{\"ackId\": \"id1\"}", PubsubReceivedAckableMessage.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{\"" + PubsubReceivedAckableMessage.JsonFieldName.ACK_ID + "\": \"id1\"}";
+                    JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
+                })
                 .hasCauseInstanceOf(MismatchedInputException.class)
                 .hasMessageContaining("Missing required creator property 'message'");
     }
@@ -44,8 +53,13 @@ public class PubsubReceivedAckableMessageTest {
     @Test
     public void test_deserialization_with_null_message() {
         Assertions
-                .assertThatThrownBy(() -> JacksonHelpers.readValue(
-                        "{\"ackId\": \"id1\", \"message\": null}", PubsubReceivedAckableMessage.class))
+                .assertThatThrownBy(() -> {
+                    String json = "{" +
+                            '"' + PubsubReceivedAckableMessage.JsonFieldName.ACK_ID + "\": \"ackId1\"" +
+                            ", \"" + PubsubReceivedAckableMessage.JsonFieldName.MESSAGE + "\": null" +
+                            '}';
+                    JacksonHelpers.readValue(json, PubsubReceivedAckableMessage.class);
+                })
                 .hasCauseInstanceOf(InvalidDefinitionException.class)
                 .hasMessageContaining("problem: message");
     }
@@ -58,13 +72,13 @@ public class PubsubReceivedAckableMessageTest {
         byte[] expectedPayload = {1, 2, 3};
         Map<String, String> expectedAttributes = Collections.singletonMap("key", "val");
         Map<String, Object> expectedReceivedMessageMap = MapHelpers.createMap(
-                "publishTime", expectedInstant.toString(),
-                "messageId", "messageId1",
-                "data", Base64.getEncoder().encodeToString(expectedPayload),
-                "attributes", expectedAttributes);
+                PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT, expectedInstant.toString(),
+                PubsubReceivedMessage.JsonFieldName.ID, "messageId1",
+                PubsubReceivedMessage.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload),
+                PubsubReceivedMessage.JsonFieldName.ATTRIBUTES, expectedAttributes);
         Map<String, Object> expectedReceivedAckableMessageMap = MapHelpers.createMap(
-                "ackId", "ackId1",
-                "message", expectedReceivedMessageMap);
+                PubsubReceivedAckableMessage.JsonFieldName.ACK_ID, "ackId1",
+                PubsubReceivedAckableMessage.JsonFieldName.MESSAGE, expectedReceivedMessageMap);
         String messageJson = JacksonHelpers.writeValueAsString(expectedReceivedAckableMessageMap);
 
         // Deserialize Pub/Sub message from the JSON.
