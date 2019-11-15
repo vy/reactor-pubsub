@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Map;
 
 public class PubsubReceivedAckableMessageTest {
@@ -55,10 +56,12 @@ public class PubsubReceivedAckableMessageTest {
         // Build a Pub/Sub pull response JSON.
         Instant expectedInstant = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload = {1, 2, 3};
+        Map<String, String> expectedAttributes = Collections.singletonMap("key", "val");
         Map<String, Object> expectedReceivedMessageMap = MapHelpers.createMap(
                 "publishTime", expectedInstant.toString(),
                 "messageId", "messageId1",
-                "data", Base64.getEncoder().encodeToString(expectedPayload));
+                "data", Base64.getEncoder().encodeToString(expectedPayload),
+                "attributes", expectedAttributes);
         Map<String, Object> expectedReceivedAckableMessageMap = MapHelpers.createMap(
                 "ackId", "ackId1",
                 "message", expectedReceivedMessageMap);
@@ -72,7 +75,7 @@ public class PubsubReceivedAckableMessageTest {
         PubsubReceivedAckableMessage expectedMessage = new PubsubReceivedAckableMessage(
                 "ackId1",
                 new PubsubReceivedMessage(
-                        expectedInstant, "messageId1", expectedPayload));
+                        expectedInstant, "messageId1", expectedPayload, expectedAttributes));
 
         // Compare contents.
         Assertions.assertThat(actualMessage).isEqualTo(expectedMessage);

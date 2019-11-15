@@ -3,6 +3,8 @@ package com.vlkan.pubsub.model;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public enum PubsubReceivedMessageFixture {;
@@ -18,7 +20,10 @@ public enum PubsubReceivedMessageFixture {;
         byte[] payload = String
                 .format("payload-%04d", messageIndex)
                 .getBytes(StandardCharsets.UTF_8);
-        return new PubsubReceivedMessage(publishInstant, id, payload);
+        String attributeKey = String.format("key-%04d", messageIndex);
+        String attributeVal = String.format("val-%04d", messageIndex);
+        Map<String, String> attributes = Collections.singletonMap(attributeKey, attributeVal);
+        return new PubsubReceivedMessage(publishInstant, id, payload, attributes);
     }
 
 }

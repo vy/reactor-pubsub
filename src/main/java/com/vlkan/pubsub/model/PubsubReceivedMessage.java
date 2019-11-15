@@ -27,6 +27,8 @@ import com.vlkan.pubsub.jackson.JacksonInstantSerializer;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -45,6 +47,9 @@ public class PubsubReceivedMessage {
     @JsonSerialize(using = JacksonBase64EncodedStringSerializer.class)
     private final byte[] payload;
 
+    @JsonProperty
+    private final Map<String, String> attributes;
+
     @JsonCreator
     public PubsubReceivedMessage(
             @JsonProperty(value = "publishTime", required = true)
@@ -54,10 +59,15 @@ public class PubsubReceivedMessage {
                     String id,
             @JsonProperty(value = "data", required = true)
             @JsonDeserialize(using = JacksonBase64EncodedStringDeserializer.class)
-                    byte[] payload) {
+                    byte[] payload,
+            @JsonProperty(value = "attributes")
+                    Map<String, String> attributes) {
         this.publishInstant = Objects.requireNonNull(publishInstant, "publishInstant");
         this.id = Objects.requireNonNull(id, "id");
         this.payload = Objects.requireNonNull(payload, "payload");
+        this.attributes = attributes != null
+                ? attributes
+                : Collections.emptyMap();
     }
 
     public Instant getPublishInstant() {
@@ -72,6 +82,10 @@ public class PubsubReceivedMessage {
         return payload;
     }
 
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
@@ -79,12 +93,13 @@ public class PubsubReceivedMessage {
         PubsubReceivedMessage that = (PubsubReceivedMessage) object;
         return Objects.equals(publishInstant, that.publishInstant) &&
                 Objects.equals(id, that.id) &&
-                Arrays.equals(payload, that.payload);
+                Arrays.equals(payload, that.payload) &&
+                Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(publishInstant, id);
+        int result = Objects.hash(publishInstant, id, attributes);
         result = 31 * result + Arrays.hashCode(payload);
         return result;
     }
@@ -94,6 +109,7 @@ public class PubsubReceivedMessage {
         return "PubsubReceivedMessage{" +
                 "id=" + id +
                 ", publishInstant=" + publishInstant +
+                ", attributes=" + attributes +
                 '}';
     }
 

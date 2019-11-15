@@ -42,19 +42,23 @@ public class PubsubPullResponseTest {
         // Build a Pub/Sub pull response JSON.
         Instant expectedInstant1 = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload1 = {1, 2, 3};
+        Map<String, String> expectedAttributes1 = Collections.singletonMap("key1", "val1");
         Map<String, Object> expectedReceivedMessage1Map = MapHelpers.createMap(
                 "publishTime", expectedInstant1.toString(),
                 "messageId", "messageId1",
-                "data", Base64.getEncoder().encodeToString(expectedPayload1));
+                "data", Base64.getEncoder().encodeToString(expectedPayload1),
+                "attributes", expectedAttributes1);
         Map<String, Object> expectedReceivedAckableMessage1Map = MapHelpers.createMap(
                 "ackId", "ackId1",
                 "message", expectedReceivedMessage1Map);
         Instant expectedInstant2 = expectedInstant1.plus(Duration.ofMinutes(1));
         byte[] expectedPayload2 = {4, 5, 6};
+        Map<String, String> expectedAttributes2 = Collections.singletonMap("key2", "val2");
         Map<String, Object> expectedReceivedMessage2Map = MapHelpers.createMap(
                 "publishTime", expectedInstant2.toString(),
                 "messageId", "messageId2",
-                "data", Base64.getEncoder().encodeToString(expectedPayload2));
+                "data", Base64.getEncoder().encodeToString(expectedPayload2),
+                "attributes", expectedAttributes2);
         Map<String, Object> expectedReceivedAckableMessage2Map = MapHelpers.createMap(
                 "ackId", "ackId2",
                 "message", expectedReceivedMessage2Map);
@@ -74,11 +78,17 @@ public class PubsubPullResponseTest {
                 new PubsubReceivedAckableMessage(
                         "ackId1",
                         new PubsubReceivedMessage(
-                                expectedInstant1, "messageId1", expectedPayload1)),
+                                expectedInstant1,
+                                "messageId1",
+                                expectedPayload1,
+                                expectedAttributes1)),
                 new PubsubReceivedAckableMessage(
                         "ackId2",
                         new PubsubReceivedMessage(
-                                expectedInstant2, "messageId2", expectedPayload2))));
+                                expectedInstant2,
+                                "messageId2",
+                                expectedPayload2,
+                                expectedAttributes2))));
 
         // Compare the content.
         Assertions.assertThat(actualResponse).isEqualTo(expectedResponse);

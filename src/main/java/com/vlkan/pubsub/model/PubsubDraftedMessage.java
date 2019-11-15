@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.vlkan.pubsub.jackson.JacksonBase64EncodedStringSerializer;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -32,13 +34,26 @@ public class PubsubDraftedMessage {
     @JsonSerialize(using = JacksonBase64EncodedStringSerializer.class)
     private final byte[] payload;
 
+    @JsonProperty
+    private final Map<String, String> attributes;
+
     public PubsubDraftedMessage(byte[] payload) {
+        this(payload, Collections.emptyMap());
+    }
+
+    public PubsubDraftedMessage(byte[] payload, Map<String, String> attributes) {
         Objects.requireNonNull(payload, "payload");
+        Objects.requireNonNull(attributes, "attributes");
         this.payload = payload;
+        this.attributes = attributes;
     }
 
     public byte[] getPayload() {
         return payload;
+    }
+
+    public Map<String, String> getAttributes() {
+        return attributes;
     }
 
     @Override
@@ -46,12 +61,15 @@ public class PubsubDraftedMessage {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         PubsubDraftedMessage that = (PubsubDraftedMessage) object;
-        return Arrays.equals(payload, that.payload);
+        return Arrays.equals(payload, that.payload) &&
+                Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(payload);
+        int result = Objects.hash(attributes);
+        result = 31 * result + Arrays.hashCode(payload);
+        return result;
     }
 
     @Override
@@ -59,6 +77,7 @@ public class PubsubDraftedMessage {
         int payloadLength = payload.length;
         return "PubsubDraftedMessage{" +
                 "payloadLength=" + payloadLength +
+                ", attributes=" + attributes +
                 '}';
     }
 
