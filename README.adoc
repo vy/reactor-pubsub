@@ -126,19 +126,22 @@ PubsubAcker acker = PubsubAcker
 // Pull and consume continuously.
 puller
         .pullAll()
-        .flatMap(pullResponse -> {
+        .concatMap(pullResponse -> {
             int messageCount = pullResponse.getReceivedAckableMessages().size();
             System.out.format("Just got awesome %d messages!%n", messageCount);
-            List<String> ackIds = pullResponse
-                    .getReceivedAckableMessages()
-                    .stream()
-                    .map(PubsubReceivedAckableMessage::getAckId)
-                    .collect(Collectors.toList());
-            PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
-            return acker.ack(ackRequest);
+            return acker.ackPullResponse(pullResponse);
         })
         .subscribe();
 ```
+
+Note that `PubsubAcker` provides the following auxiliary methods:
+
+- `ackPullResponse(PubsubPullResponse pullResponse)`
+- `ackMessages(List<PubsubAckableReceivedMessage> ackableMessages)`
+- `ackMessage(PubsubAckableReceivedMessage ackableMessage)`
+- `ackIds(List<String> ackIds)`
+- `ackId(String ackId)`
+- `ack(PubsubAckRequest ackRequest)`
 
 == Utilities
 
@@ -185,10 +188,9 @@ Function<Flux<PubsubPullResponse>, Flux<PubsubPullResponse>> stagedRateLimiterFl
 // Employ the staged rate limiter.
 puller
         .pullAll()
-        .flatMap(pullResponse -> {
+        .concatMap(pullResponse -> {
             // ...
-            PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
-            return acker.ack(ackRequest);
+            return acker.ackPullResponse(pullResponse);
         })
         .transform(stagedRateLimiterFluxDecorator)
         .subscribe();
@@ -275,10 +277,9 @@ PubsubPuller puller = PubsubPuller
 // Employ the scheduler in the Reactor pipeline.
 puller
         .pullAll()
-        .flatMap(pullResponse -> {
+        .concatMap(pullResponse -> {
             // ...
-            PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
-            return acker.ack(ackRequest);
+            return acker.ackPullResponse(pullResponse);
         })
         .flatMap(this::doSomeOtherAsyncIO)
         .subscribeOn(scheduler)
@@ -296,15 +297,7 @@ puller
         .pullAll()
         .concatMap(pullResponse -> businessLogic
                 .execute(pullResponse)
-                .then(Mono.fromCallable(() -> {
-                    List<String> ackIds = pullResponse
-                            .getReceivedAckableMessages()
-                            .stream()
-                            .map(PubsubReceivedAckableMessage::getAckId)
-                            .collect(Collectors.toList());
-                    PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
-                    return acker.ack(ackRequest);
-                }))
+                .then(acker.ackPullResponse(pullResponse)))
         .subscribe();
 ```
 

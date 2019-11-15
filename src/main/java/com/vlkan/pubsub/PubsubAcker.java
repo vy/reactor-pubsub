@@ -17,9 +17,14 @@
 package com.vlkan.pubsub;
 
 import com.vlkan.pubsub.model.PubsubAckRequest;
+import com.vlkan.pubsub.model.PubsubPullResponse;
+import com.vlkan.pubsub.model.PubsubReceivedAckableMessage;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class PubsubAcker {
 
@@ -38,6 +43,39 @@ public class PubsubAcker {
 
     public PubsubClient getClient() {
         return client;
+    }
+
+    public Mono<Void> ackPullResponse(PubsubPullResponse pullResponse) {
+        Objects.requireNonNull(pullResponse, "pullResponse");
+        return ackMessages(pullResponse.getReceivedAckableMessages());
+    }
+
+    public Mono<Void> ackMessages(List<PubsubReceivedAckableMessage> ackableMessages) {
+        Objects.requireNonNull(ackableMessages, "ackableMessages");
+        List<String> ackIds = ackableMessages
+                .stream()
+                .map(PubsubReceivedAckableMessage::getAckId)
+                .collect(Collectors.toList());
+        return ackIds(ackIds);
+    }
+
+    public Mono<Void> ackMessage(PubsubReceivedAckableMessage ackableMessage) {
+        Objects.requireNonNull(ackableMessage, "ackableMessage");
+        String ackId = ackableMessage.getAckId();
+        return ackId(ackId);
+    }
+
+    public Mono<Void> ackIds(List<String> ackIds) {
+        Objects.requireNonNull(ackIds, "ackIds");
+        PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
+        return ack(ackRequest);
+    }
+
+    public Mono<Void> ackId(String ackId) {
+        Objects.requireNonNull(ackId, "ackId");
+        List<String> ackIds = Collections.singletonList(ackId);
+        PubsubAckRequest ackRequest = new PubsubAckRequest(ackIds);
+        return ack(ackRequest);
     }
 
     public Mono<Void> ack(PubsubAckRequest ackRequest) {
