@@ -1,4 +1,6 @@
-== (????-??-??) v0.1.2
+== (2019-11-15) v0.1.2
+
+- Add support for message attributes. (#16)
 
 - Extend `PubsubAcker` with auxiliary methods. (#17)
 
