@@ -96,6 +96,11 @@ publisher
         .subscribe();
 ```
 
+Note that `PubsubDraftedMessage` constructor has two variants:
+
+- `PubsubDraftedMessage(byte[] payload)`
+- `PubsubDraftedMessage(byte[] payload, Map<String, String> attributes)`
+
 You can create a subscriber and start receiving messages from a subscription as
 follows:
 
