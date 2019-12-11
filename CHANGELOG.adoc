@@ -1,3 +1,7 @@
+== (????-??-??) v0.2.0
+
+- Merge `PubsubReceivedMessage` into `PubsubReceivedAckableMessage`. (#19)
+
 == (2019-11-15) v0.1.2
 
 - Add support for message attributes. (#16)

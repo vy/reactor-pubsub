@@ -132,7 +132,7 @@ PubsubAcker acker = PubsubAcker
 puller
         .pullAll()
         .concatMap(pullResponse -> {
-            int messageCount = pullResponse.getReceivedAckableMessages().size();
+            int messageCount = pullResponse.getReceivedMessages().size();
             System.out.format("Just got awesome %d messages!%n", messageCount);
             return acker.ackPullResponse(pullResponse);
         })
@@ -142,8 +142,8 @@ puller
 Note that `PubsubAcker` provides the following auxiliary methods:
 
 - `ackPullResponse(PubsubPullResponse pullResponse)`
-- `ackMessages(List<PubsubAckableReceivedMessage> ackableMessages)`
-- `ackMessage(PubsubAckableReceivedMessage ackableMessage)`
+- `ackMessages(List<PubsubReceivedMessage> messages)`
+- `ackMessage(PubsubReceivedMessage message)`
 - `ackIds(List<String> ackIds)`
 - `ackId(String ackId)`
 - `ack(PubsubAckRequest ackRequest)`

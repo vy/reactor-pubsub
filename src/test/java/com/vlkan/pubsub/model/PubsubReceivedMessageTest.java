@@ -13,99 +13,54 @@ import java.util.Map;
 
 public class PubsubReceivedMessageTest {
 
-    private static final Instant PUBLISH_INSTANT = Instant.parse("2019-08-27T11:10:00.910Z");
-
-    private static final String ID = "id1";
-
-    private static final byte[] PAYLOAD = new byte[]{1, 2, 3};
-
-    private static final String ENCODED_PAYLOAD = Base64.getEncoder().encodeToString(PAYLOAD);
-
     @Test
-    public void test_deserialization_with_empty_publishInstant() {
+    public void test_deserialization_with_empty_ackId() {
         Assertions
                 .assertThatThrownBy(() -> {
-                    String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.ID + "\": \"" + ID + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.PAYLOAD + "\": \"" + ENCODED_PAYLOAD + '"' +
-                            '}';
+                    String json = "{}";
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
                 .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("Missing required creator property 'publishTime'");
+                .hasMessageContaining("Missing required creator property 'ackId'");
     }
 
     @Test
-    public void test_deserialization_with_null_publishInstant() {
+    public void test_deserialization_with_null_ackId() {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT + "\": null" +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.ID + "\": \"" + ID + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.PAYLOAD + "\": \"" + ENCODED_PAYLOAD + '"' +
+                            '"' + PubsubReceivedMessage.JsonFieldName.ACK_ID + "\": null" +
+                            ", \"" + PubsubReceivedMessage.JsonFieldName.EMBEDDING + "\": null" +
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
                 .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("problem: publishInstant");
+                .hasMessageContaining("problem: ackId");
     }
 
     @Test
-    public void test_deserialization_with_empty_id() {
+    public void test_deserialization_with_empty_message() {
         Assertions
                 .assertThatThrownBy(() -> {
-                    String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.PAYLOAD + "\": \"" + ENCODED_PAYLOAD + '"' +
-                            '}';
+                    String json = "{\"" + PubsubReceivedMessage.JsonFieldName.ACK_ID + "\": \"id1\"}";
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
                 .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("Missing required creator property 'messageId'");
+                .hasMessageContaining("Missing required creator property 'message'");
     }
 
     @Test
-    public void test_deserialization_with_null_id() {
+    public void test_deserialization_with_null_embedding() {
         Assertions
                 .assertThatThrownBy(() -> {
                     String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.ID + "\": null" +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.PAYLOAD + "\": \"" + ENCODED_PAYLOAD + '"' +
+                            '"' + PubsubReceivedMessage.JsonFieldName.ACK_ID + "\": \"ackId1\"" +
+                            ", \"" + PubsubReceivedMessage.JsonFieldName.EMBEDDING + "\": null" +
                             '}';
                     JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
                 })
                 .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("problem: id");
-    }
-
-    @Test
-    public void test_deserialization_with_empty_data() {
-        Assertions
-                .assertThatThrownBy(() -> {
-                    String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.ID + "\": \"" + ID + '"' +
-                            '}';
-                    JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
-                })
-                .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("Missing required creator property 'data'");
-    }
-
-    @Test
-    public void test_deserialization_with_null_data() {
-        Assertions
-                .assertThatThrownBy(() -> {
-                    String json = "{" +
-                            '"' + PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.ID + "\": \"" + ID + '"' +
-                            ",\"" + PubsubReceivedMessage.JsonFieldName.PAYLOAD + "\": null" +
-                            '}';
-                    JacksonHelpers.readValue(json, PubsubReceivedMessage.class);
-                })
-                .hasCauseInstanceOf(JsonMappingException.class)
-                .hasMessageContaining("problem: payload");
+                .hasMessageContaining("problem: embedding");
     }
 
     @Test
@@ -115,21 +70,25 @@ public class PubsubReceivedMessageTest {
         Instant expectedInstant = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload = {1, 2, 3};
         Map<String, String> expectedAttributes = Collections.singletonMap("key", "val");
-        Map<String, Object> expectedMessageMap = MapHelpers.createMap(
-                PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT, expectedInstant.toString(),
-                PubsubReceivedMessage.JsonFieldName.ID, "messageId1",
-                PubsubReceivedMessage.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload),
-                PubsubReceivedMessage.JsonFieldName.ATTRIBUTES, expectedAttributes);
-        String messageJson = JacksonHelpers.writeValueAsString(expectedMessageMap);
+        Map<String, Object> expectedReceivedMessageEmbeddingMap = MapHelpers.createMap(
+                PubsubReceivedMessageEmbedding.JsonFieldName.PUBLISH_INSTANT, expectedInstant.toString(),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ID, "messageId1",
+                PubsubReceivedMessageEmbedding.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ATTRIBUTES, expectedAttributes);
+        Map<String, Object> expectedReceivedMessageMap = MapHelpers.createMap(
+                PubsubReceivedMessage.JsonFieldName.ACK_ID, "ackId1",
+                PubsubReceivedMessage.JsonFieldName.EMBEDDING, expectedReceivedMessageEmbeddingMap);
+        String messageJson = JacksonHelpers.writeValueAsString(expectedReceivedMessageMap);
 
         // Deserialize Pub/Sub message from the JSON.
         PubsubReceivedMessage actualMessage =
                 JacksonHelpers.readValue(messageJson, PubsubReceivedMessage.class);
 
         // Build the expected response model.
-        PubsubReceivedMessage expectedMessage =
-                new PubsubReceivedMessage(
-                        expectedInstant, "messageId1", expectedPayload, expectedAttributes);
+        PubsubReceivedMessage expectedMessage = new PubsubReceivedMessage(
+                "ackId1",
+                new PubsubReceivedMessageEmbedding(
+                        expectedInstant, "messageId1", expectedPayload, expectedAttributes));
 
         // Compare contents.
         Assertions.assertThat(actualMessage).isEqualTo(expectedMessage);
@@ -138,11 +97,9 @@ public class PubsubReceivedMessageTest {
 
     @Test
     public void test_serialization() {
-        PubsubReceivedMessage message =
-                PubsubReceivedMessageFixture.createRandomReceivedMessage();
+        PubsubReceivedMessage message = PubsubReceivedMessageFixture.createRandomReceivedMessage();
         String messageJson = JacksonHelpers.writeValueAsString(message);
-        PubsubReceivedMessage deserializedMessage =
-                JacksonHelpers.readValue(messageJson, PubsubReceivedMessage.class);
+        PubsubReceivedMessage deserializedMessage = JacksonHelpers.readValue(messageJson, PubsubReceivedMessage.class);
         Assertions.assertThat(deserializedMessage).isEqualTo(message);
     }
 

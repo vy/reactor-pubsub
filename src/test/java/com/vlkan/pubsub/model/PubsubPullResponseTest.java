@@ -19,21 +19,21 @@ public class PubsubPullResponseTest {
     public void test_deserialization_with_empty_payload() {
         String responseJson = "{}";
         PubsubPullResponse response = JacksonHelpers.readValue(responseJson, PubsubPullResponse.class);
-        Assertions.assertThat(response.getReceivedAckableMessages()).isEmpty();
+        Assertions.assertThat(response.getReceivedMessages()).isEmpty();
     }
 
     @Test
-    public void test_deserialization_with_null_receivedAckableMessages() {
-        String responseJson = "{\"" + PubsubPullResponse.JsonFieldName.RECEIVED_ACKABLE_MESSAGES + "\": null}";
+    public void test_deserialization_with_null_receivedMessages() {
+        String responseJson = "{\"" + PubsubPullResponse.JsonFieldName.RECEIVED_MESSAGES + "\": null}";
         PubsubPullResponse response = JacksonHelpers.readValue(responseJson, PubsubPullResponse.class);
-        Assertions.assertThat(response.getReceivedAckableMessages()).isEmpty();
+        Assertions.assertThat(response.getReceivedMessages()).isEmpty();
     }
 
     @Test
-    public void test_deserialization_with_empty_receivedAckableMessages() {
-        String responseJson = "{\"" + PubsubPullResponse.JsonFieldName.RECEIVED_ACKABLE_MESSAGES + "\": []}";
+    public void test_deserialization_with_empty_receivedMessages() {
+        String responseJson = "{\"" + PubsubPullResponse.JsonFieldName.RECEIVED_MESSAGES + "\": []}";
         PubsubPullResponse response = JacksonHelpers.readValue(responseJson, PubsubPullResponse.class);
-        Assertions.assertThat(response.getReceivedAckableMessages()).isEmpty();
+        Assertions.assertThat(response.getReceivedMessages()).isEmpty();
     }
 
     @Test
@@ -43,31 +43,31 @@ public class PubsubPullResponseTest {
         Instant expectedInstant1 = Instant.parse("2019-08-27T08:04:57Z");
         byte[] expectedPayload1 = {1, 2, 3};
         Map<String, String> expectedAttributes1 = Collections.singletonMap("key1", "val1");
+        Map<String, Object> expectedReceivedMessageEmbedding1Map = MapHelpers.createMap(
+                PubsubReceivedMessageEmbedding.JsonFieldName.PUBLISH_INSTANT, expectedInstant1.toString(),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ID, "messageId1",
+                PubsubReceivedMessageEmbedding.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload1),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ATTRIBUTES, expectedAttributes1);
         Map<String, Object> expectedReceivedMessage1Map = MapHelpers.createMap(
-                PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT, expectedInstant1.toString(),
-                PubsubReceivedMessage.JsonFieldName.ID, "messageId1",
-                PubsubReceivedMessage.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload1),
-                PubsubReceivedMessage.JsonFieldName.ATTRIBUTES, expectedAttributes1);
-        Map<String, Object> expectedReceivedAckableMessage1Map = MapHelpers.createMap(
-                PubsubReceivedAckableMessage.JsonFieldName.ACK_ID, "ackId1",
-                PubsubReceivedAckableMessage.JsonFieldName.MESSAGE, expectedReceivedMessage1Map);
+                PubsubReceivedMessage.JsonFieldName.ACK_ID, "ackId1",
+                PubsubReceivedMessage.JsonFieldName.EMBEDDING, expectedReceivedMessageEmbedding1Map);
         Instant expectedInstant2 = expectedInstant1.plus(Duration.ofMinutes(1));
         byte[] expectedPayload2 = {4, 5, 6};
         Map<String, String> expectedAttributes2 = Collections.singletonMap("key2", "val2");
+        Map<String, Object> expectedReceivedMessageEmbedding2Map = MapHelpers.createMap(
+                PubsubReceivedMessageEmbedding.JsonFieldName.PUBLISH_INSTANT, expectedInstant2.toString(),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ID, "messageId2",
+                PubsubReceivedMessageEmbedding.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload2),
+                PubsubReceivedMessageEmbedding.JsonFieldName.ATTRIBUTES, expectedAttributes2);
         Map<String, Object> expectedReceivedMessage2Map = MapHelpers.createMap(
-                PubsubReceivedMessage.JsonFieldName.PUBLISH_INSTANT, expectedInstant2.toString(),
-                PubsubReceivedMessage.JsonFieldName.ID, "messageId2",
-                PubsubReceivedMessage.JsonFieldName.PAYLOAD, Base64.getEncoder().encodeToString(expectedPayload2),
-                PubsubReceivedMessage.JsonFieldName.ATTRIBUTES, expectedAttributes2);
-        Map<String, Object> expectedReceivedAckableMessage2Map = MapHelpers.createMap(
-                PubsubReceivedAckableMessage.JsonFieldName.ACK_ID, "ackId2",
-                PubsubReceivedAckableMessage.JsonFieldName.MESSAGE, expectedReceivedMessage2Map);
-        List<Map<String, Object>> expectedReceivedAckableMessagesMap = Arrays.asList(
-                expectedReceivedAckableMessage1Map,
-                expectedReceivedAckableMessage2Map);
+                PubsubReceivedMessage.JsonFieldName.ACK_ID, "ackId2",
+                PubsubReceivedMessage.JsonFieldName.EMBEDDING, expectedReceivedMessageEmbedding2Map);
+        List<Map<String, Object>> expectedReceivedMessagesList = Arrays.asList(
+                expectedReceivedMessage1Map,
+                expectedReceivedMessage2Map);
         Map<String, Object> expectedResponseMap = Collections.singletonMap(
-                PubsubPullResponse.JsonFieldName.RECEIVED_ACKABLE_MESSAGES,
-                expectedReceivedAckableMessagesMap);
+                PubsubPullResponse.JsonFieldName.RECEIVED_MESSAGES,
+                expectedReceivedMessagesList);
         String responseJson = JacksonHelpers.writeValueAsString(expectedResponseMap);
 
         // Deserialize Pub/Sub pull response from the JSON.
@@ -76,16 +76,16 @@ public class PubsubPullResponseTest {
 
         // Build the expected response model.
         PubsubPullResponse expectedResponse = new PubsubPullResponse(Arrays.asList(
-                new PubsubReceivedAckableMessage(
+                new PubsubReceivedMessage(
                         "ackId1",
-                        new PubsubReceivedMessage(
+                        new PubsubReceivedMessageEmbedding(
                                 expectedInstant1,
                                 "messageId1",
                                 expectedPayload1,
                                 expectedAttributes1)),
-                new PubsubReceivedAckableMessage(
+                new PubsubReceivedMessage(
                         "ackId2",
-                        new PubsubReceivedMessage(
+                        new PubsubReceivedMessageEmbedding(
                                 expectedInstant2,
                                 "messageId2",
                                 expectedPayload2,

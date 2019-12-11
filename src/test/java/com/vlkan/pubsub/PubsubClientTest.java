@@ -11,7 +11,6 @@ import com.vlkan.pubsub.model.PubsubPublishResponse;
 import com.vlkan.pubsub.model.PubsubPullRequest;
 import com.vlkan.pubsub.model.PubsubPullResponse;
 import com.vlkan.pubsub.model.PubsubPullResponseFixture;
-import com.vlkan.pubsub.model.PubsubReceivedAckableMessage;
 import com.vlkan.pubsub.model.PubsubReceivedMessage;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.prometheus.PrometheusConfig;
@@ -60,26 +59,25 @@ public class PubsubClientTest {
 
     private static final PubsubAckRequest ACK_REQUEST =
             new PubsubAckRequest(PULL_RESPONSE
-                    .getReceivedAckableMessages()
+                    .getReceivedMessages()
                     .stream()
-                    .map(PubsubReceivedAckableMessage::getAckId)
+                    .map(PubsubReceivedMessage::getAckId)
                     .collect(Collectors.toList()));
 
     private static final PubsubPublishRequest PUBLISH_REQUEST =
             new PubsubPublishRequest(PULL_RESPONSE
-                    .getReceivedAckableMessages()
+                    .getReceivedMessages()
                     .stream()
-                    .map(receivedAckableMessage -> {
-                        byte[] payload = receivedAckableMessage.getMessage().getPayload();
+                    .map(receivedMessage -> {
+                        byte[] payload = receivedMessage.getPayload();
                         return new PubsubDraftedMessage(payload);
                     })
                     .collect(Collectors.toList()));
 
     private static final PubsubPublishResponse PUBLISH_RESPONSE =
             new PubsubPublishResponse(PULL_RESPONSE
-                    .getReceivedAckableMessages()
+                    .getReceivedMessages()
                     .stream()
-                    .map(PubsubReceivedAckableMessage::getMessage)
                     .map(PubsubReceivedMessage::getId)
                     .collect(Collectors.toList()));
 

@@ -7,11 +7,11 @@ import java.util.stream.IntStream;
 public enum PubsubPullResponseFixture {;
 
     public static PubsubPullResponse createRandomPullResponse(int messageCount) {
-        List<PubsubReceivedAckableMessage> receivedAckableMessages = IntStream
+        List<PubsubReceivedMessage> receivedMessages = IntStream
                 .range(0, messageCount)
-                .mapToObj(ignored -> PubsubReceivedAckableMessageFixture.createRandomReceivedAckableMessage())
+                .mapToObj(ignored -> PubsubReceivedMessageFixture.createRandomReceivedMessage())
                 .collect(Collectors.toList());
-        return new PubsubPullResponse(receivedAckableMessages);
+        return new PubsubPullResponse(receivedMessages);
     }
 
 }

@@ -163,7 +163,7 @@ public class PubsubClient {
                         counterByRequestUrl,
                         requestUrl,
                         () -> meterTagSupplier.apply(true),
-                        pullResponse -> pullResponse.getReceivedAckableMessages().size(),
+                        pullResponse -> pullResponse.getReceivedMessages().size(),
                         mono));
     }
 

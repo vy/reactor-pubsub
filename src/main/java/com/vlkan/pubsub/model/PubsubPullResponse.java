@@ -30,24 +30,24 @@ public class PubsubPullResponse {
 
     enum JsonFieldName {;
 
-        static final String RECEIVED_ACKABLE_MESSAGES = "receivedMessages";
+        static final String RECEIVED_MESSAGES = "receivedMessages";
 
     }
 
-    @JsonProperty(JsonFieldName.RECEIVED_ACKABLE_MESSAGES)
-    private final List<PubsubReceivedAckableMessage> receivedAckableMessages;
+    @JsonProperty(JsonFieldName.RECEIVED_MESSAGES)
+    private final List<PubsubReceivedMessage> receivedMessages;
 
     @JsonCreator
     public PubsubPullResponse(
-            @JsonProperty(JsonFieldName.RECEIVED_ACKABLE_MESSAGES)
-                    List<PubsubReceivedAckableMessage> receivedAckableMessages) {
-        this.receivedAckableMessages = receivedAckableMessages != null
-                ? receivedAckableMessages
+            @JsonProperty(JsonFieldName.RECEIVED_MESSAGES)
+                    List<PubsubReceivedMessage> receivedMessages) {
+        this.receivedMessages = receivedMessages != null
+                ? receivedMessages
                 : Collections.emptyList();
     }
 
-    public List<PubsubReceivedAckableMessage> getReceivedAckableMessages() {
-        return receivedAckableMessages;
+    public List<PubsubReceivedMessage> getReceivedMessages() {
+        return receivedMessages;
     }
 
     @Override
@@ -55,17 +55,17 @@ public class PubsubPullResponse {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         PubsubPullResponse that = (PubsubPullResponse) object;
-        return Objects.equals(receivedAckableMessages, that.receivedAckableMessages);
+        return Objects.equals(receivedMessages, that.receivedMessages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(receivedAckableMessages);
+        return Objects.hash(receivedMessages);
     }
 
     @Override
     public String toString() {
-        int messageCount = receivedAckableMessages.size();
+        int messageCount = receivedMessages.size();
         return "PubsubPullResponse{" +
                 "messageCount=" + messageCount +
                 '}';

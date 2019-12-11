@@ -65,13 +65,13 @@ public class PubsubPuller {
     public Mono<PubsubPullResponse> pullOne() {
         return client
                 .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
-                .filter(pullResponse -> !pullResponse.getReceivedAckableMessages().isEmpty());
+                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty());
     }
 
     public Flux<PubsubPullResponse> pullAll() {
         return client
                 .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
-                .filter(pullResponse -> !pullResponse.getReceivedAckableMessages().isEmpty())
+                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty())
                 .transform(this::delayEmptyPullsIfNecessary)
                 .repeat()
                 .checkpoint("pullAll");
