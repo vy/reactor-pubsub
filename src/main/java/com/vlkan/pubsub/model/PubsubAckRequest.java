@@ -17,11 +17,10 @@
 package com.vlkan.pubsub.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vlkan.pubsub.util.CollectionHelpers;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Jackson-serializable Pub/Sub acknowledge request model.
@@ -64,23 +63,10 @@ public class PubsubAckRequest {
 
     @Override
     public String toString() {
-        String formattedAckIds = formatAckIds();
+        String formattedAckIds = CollectionHelpers.limitedFormat(ackIds, 2);
         return "PubsubAckRequest{" +
                 "ackIds=" + formattedAckIds +
                 '}';
-    }
-
-    private String formatAckIds() {
-        int ackIdCount = ackIds.size();
-        int maxFormattedAckIdCount = 2;
-        List<String> visibleAckIds = ackIds;
-        if (ackIdCount > maxFormattedAckIdCount) {
-            visibleAckIds = Stream
-                    .concat(ackIds.stream().limit(maxFormattedAckIdCount),
-                            Stream.of(String.format("<%d more>", ackIdCount - maxFormattedAckIdCount)))
-                    .collect(Collectors.toList());
-        }
-        return String.valueOf(visibleAckIds);
     }
 
 }

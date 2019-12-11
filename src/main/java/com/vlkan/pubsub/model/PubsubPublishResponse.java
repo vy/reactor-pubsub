@@ -18,11 +18,10 @@ package com.vlkan.pubsub.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vlkan.pubsub.util.CollectionHelpers;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Jackson-(de)serializable Pub/Sub publish response model.
@@ -68,23 +67,10 @@ public class PubsubPublishResponse {
 
     @Override
     public String toString() {
-        String formattedMessageIds = formatMessageIds();
+        String formattedMessageIds = CollectionHelpers.limitedFormat(messageIds, 2);
         return "PubsubPublishResponse{" +
                 "messageIds=" + formattedMessageIds +
                 '}';
-    }
-
-    private String formatMessageIds() {
-        int messageIdCount = messageIds.size();
-        int maxFormattedMessageIdCount = 2;
-        List<String> visibleMessageIds = messageIds;
-        if (messageIdCount > maxFormattedMessageIdCount) {
-            visibleMessageIds = Stream
-                    .concat(messageIds.stream().limit(maxFormattedMessageIdCount),
-                            Stream.of(String.format("<%d more>", messageIdCount - maxFormattedMessageIdCount)))
-                    .collect(Collectors.toList());
-        }
-        return String.valueOf(visibleMessageIds);
     }
 
 }
