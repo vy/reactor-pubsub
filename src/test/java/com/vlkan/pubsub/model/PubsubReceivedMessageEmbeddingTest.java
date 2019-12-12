@@ -113,6 +113,22 @@ public class PubsubReceivedMessageEmbeddingTest {
     public void test_deserialization_with_null_data() {
         Assertions
                 .assertThatThrownBy(() -> {
+                    String encodedEmptyBytes = Base64.getEncoder().encodeToString(new byte[0]);
+                    String json = "{" +
+                            '"' + PubsubReceivedMessageEmbedding.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
+                            ",\"" + PubsubReceivedMessageEmbedding.JsonFieldName.ID + "\": \"" + ID + '"' +
+                            ",\"" + PubsubReceivedMessageEmbedding.JsonFieldName.PAYLOAD + "\": \"" + encodedEmptyBytes + '"' +
+                            '}';
+                    JacksonHelpers.readValue(json, PubsubReceivedMessageEmbedding.class);
+                })
+                .hasCauseInstanceOf(JsonMappingException.class)
+                .hasMessageContaining("problem: both payload and attributes cannot be null");
+    }
+
+    @Test
+    public void test_deserialization_with_empty_payload_and_attributes() {
+        Assertions
+                .assertThatThrownBy(() -> {
                     String json = "{" +
                             '"' + PubsubReceivedMessageEmbedding.JsonFieldName.PUBLISH_INSTANT + "\": \"" + PUBLISH_INSTANT + '"' +
                             ",\"" + PubsubReceivedMessageEmbedding.JsonFieldName.ID + "\": \"" + ID + '"' +

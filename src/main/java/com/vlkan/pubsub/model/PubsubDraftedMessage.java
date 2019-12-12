@@ -52,6 +52,9 @@ public class PubsubDraftedMessage {
     public PubsubDraftedMessage(byte[] payload, Map<String, String> attributes) {
         this.payload = Objects.requireNonNull(payload, "payload");
         this.attributes = Objects.requireNonNull(attributes, "attributes");
+        if (payload.length == 0 && attributes.isEmpty()) {
+            throw new IllegalArgumentException("both payload and attributes cannot be empty");
+        }
     }
 
     public byte[] getPayload() {

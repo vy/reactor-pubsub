@@ -44,6 +44,14 @@ public class PubsubDraftedMessageTest {
     }
 
     @Test
+    public void test_ctor_with_empty_payload_and_attributes() {
+        Assertions
+                .assertThatThrownBy(() -> new PubsubDraftedMessage(new byte[0], Collections.emptyMap()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("both payload and attributes cannot be empty");
+    }
+
+    @Test
     public void test_serialization() {
         byte[] payload = new byte[]{1, 2, 3, 4};
         Map<String, String> attributes = Collections.singletonMap("key", "val");

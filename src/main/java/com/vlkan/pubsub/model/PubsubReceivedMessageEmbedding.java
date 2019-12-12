@@ -80,6 +80,9 @@ public class PubsubReceivedMessageEmbedding {
         this.attributes = attributes != null
                 ? attributes
                 : Collections.emptyMap();
+        if (payload.length == 0 && this.attributes.isEmpty()) {
+            throw new IllegalArgumentException("both payload and attributes cannot be null");
+        }
     }
 
     Instant getPublishInstant() {
