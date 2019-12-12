@@ -24,9 +24,7 @@ into messaging.
 - It is *batteries-included*, because it provides goodies (out of the box
   metrics integration, an adaptive rate limiter to help you avoid burning money
   by continuously pulling and nack'ing messages when something is wrong with
-  your consumer, a `ScheduledExecutorService` implementation with a bounded task
-  queue to mitigate backpressure violating consumption) that assist real-world
-  production deployments.
+  your consumer) that assist real-world production deployments.
 
 - It is *simple*, because there are 2 dozens of classes where half is used to
   represent JSON models transmitted over the wire and the rest is just reactive
@@ -238,63 +236,6 @@ stages.
 
 By contract, initially the active stage is set to the one with the slowest
 success rate limit.
-
-=== Bounded `SchedulerExecutorService`
-
-`PubsubPuller`, `PubsubAccessTokenCache`, and
-`StagedRateLimiterReactorDecoratorFactory` optionally receive either a
-`ScheduledExecutorService` or a Reactor `Scheduler` in their builders for timed
-invocations. One can explicitly change the implicit scheduler used by any
-Reactor `Mono<T>` or `Flux<T>` as well. (See
-https://projectreactor.io/docs/core/release/reference/#schedulers[Threading and
-Schedulers] in Reactor reference manual.) We strongly suggest employing a common
-dedicated scheduler for all these cases with a _bounded task queue_. That said,
-unfortunately neither the default Reactor ``Scheduler``s nor the
-`ScheduledExecutorService` implementations provided by the Java Standard library
-allow one to put a bound on the task queue size. This shortcoming is severely
-prone to hiding backpressure problems. (See the
-http://cs.oswego.edu/pipermail/concurrency-interest/2019-April/016861.html[the
-relevant concurrency-interest discussion].) To mitigate this, we provide
-`BoundedScheduledThreadPoolExecutor` wrapper and strongly recommend to employ it
-in your Reactor assembly line. Even though this will incur an extra thread
-context switching cost, this is almost negligible for a majority of the use
-cases and the benefit will overweight this minor expense. The usage is as simple
-as follows:
-
-```java
-// Create the executor.
-ScheduledThreadPoolExecutor executor =
-        new ScheduledThreadPoolExecutor(
-                Runtime.getRuntime().availableProcessors());
-BoundedScheduledThreadPoolExecutor boundedExecutor =
-        new BoundedScheduledThreadPoolExecutor(100, executor);
-Scheduler scheduler = Schedulers.fromExecutorService(boundedExecutor);
-
-// Set the access token cache executor.
-PubsubAccessTokenCache
-        .builder()
-        .setExecutorService(executor)
-        // ...
-        .build();
-
-// Set the puller scheduler.
-PubsubPuller puller = PubsubPuller
-        .builder()
-        .setScheduler(scheduler)
-        // ...
-        .build();
-
-// Employ the scheduler in the Reactor pipeline.
-puller
-        .pullAll()
-        .concatMap(pullResponse -> {
-            // ...
-            return acker.ackPullResponse(pullResponse);
-        })
-        .flatMap(this::doSomeOtherAsyncIO)
-        .subscribeOn(scheduler)
-        .subscribe();
-```
 
 == F.A.Q
 
@@ -523,14 +464,14 @@ https://cloud.google.com/pubsub/docs/quickstart-client-libraries[the official
 Java drivers] provided by Google. Later on we started bumping into backpressure
 problems: tasks on the shared `ScheduledExecutorService` were somehow awkwardly
 dating back and constantly piling up. That was the point I introduced a
-link:src/main/java/com/vlkan/pubsub/util/BoundedScheduledThreadPoolExecutor.java[BoundedScheduledThreadPoolExecutor]
-and shit hit the fan. I figured the official Pub/Sub driver was ramming the
-fetched batch of messages through the shared executor. My first reaction was to
-cut down the pull buffer size and the concurrent pull count. That solved a
-majority of our backpressure-related problems, though created a new one:
-efficiency. Then I started examining the source code and wasted quite a lot of
-time trying to make forsaken
-https://github.com/googleapis/gax-java/blob/master/gax/src/main/java/com/google/api/gax/batching/FlowControlSettings.java[FlowControlSettings]
+`BoundedScheduledThreadPoolExecutor` (which is later on removed from the sources
+after Reactor started providing a similar scheduler) and shit hit the fan. I
+figured the official Pub/Sub driver was ramming the fetched batch of messages
+through the shared executor. My first reaction was to cut down the pull buffer
+size and the concurrent pull count. That solved a majority of our
+backpressure-related problems, though created a new one: efficiency. Then I
+started examining the source code and wasted quite a lot of time trying to make
+forsaken https://github.com/googleapis/gax-java/blob/master/gax/src/main/java/com/google/api/gax/batching/FlowControlSettings.java[FlowControlSettings]
 work. This disappointing inquiry resulted in something remarkable: I understood
 how Pub/Sub works and amazed by the extent of complexity for such a simple task.
 I have already been using Reactive Streams (RxJava and Reactor) every single

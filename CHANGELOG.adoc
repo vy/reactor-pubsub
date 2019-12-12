@@ -1,5 +1,7 @@
 == (????-??-??) v0.2.0
 
+- Remove `BoundedScheduledThreadPoolExecutor`. (#10)
+
 - Extend `PubsubPublisher` with auxiliary methods.
 
 - Make sure both message payload and attributes cannot be empty.
