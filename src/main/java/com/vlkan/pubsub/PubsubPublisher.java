@@ -16,10 +16,13 @@
 
 package com.vlkan.pubsub;
 
+import com.vlkan.pubsub.model.PubsubDraftedMessage;
 import com.vlkan.pubsub.model.PubsubPublishRequest;
 import com.vlkan.pubsub.model.PubsubPublishResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class PubsubPublisher {
@@ -39,6 +42,18 @@ public class PubsubPublisher {
 
     public PubsubClient getClient() {
         return client;
+    }
+
+    public Mono<PubsubPublishResponse> publishMessage(PubsubDraftedMessage message) {
+        Objects.requireNonNull(message, "message");
+        List<PubsubDraftedMessage> messages = Collections.singletonList(message);
+        return publishMessages(messages);
+    }
+
+    public Mono<PubsubPublishResponse> publishMessages(List<PubsubDraftedMessage> messages) {
+        Objects.requireNonNull(messages, "messages");
+        PubsubPublishRequest publishRequest = new PubsubPublishRequest(messages);
+        return publish(publishRequest);
     }
 
     public Mono<PubsubPublishResponse> publish(PubsubPublishRequest publishRequest) {

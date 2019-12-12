@@ -84,11 +84,10 @@ PubsubPublisher publisher = PubsubPublisher
 
 // Publish a message.
 publisher
-        .publish(new PubsubPublishRequest(
-                Collections.singletonList(
-                        new PubsubDraftedMessage(
-                                "Yolo like nobody's watching!"
-                                        .getBytes(StandardCharsets.UTF_8)))))
+        .publishMessage(
+                new PubsubDraftedMessage(
+                        "Yolo like nobody's watching!"
+                                .getBytes(StandardCharsets.UTF_8)))))
         .doOnSuccess(publishResponse ->
                 System.out.format(
                         "Published awesome message ids: %s%n",
@@ -100,6 +99,12 @@ Note that `PubsubDraftedMessage` constructor has two variants:
 
 - `PubsubDraftedMessage(byte[] payload)`
 - `PubsubDraftedMessage(byte[] payload, Map<String, String> attributes)`
+
+`PubsubPublisher` provides the following auxiliary methods:
+
+- `publishMessages(List<PubsubDraftedMessage> messages)`
+- `publishMessage(List<PubsubDraftedMessage> message)`
+- `publish(PubsubPublishRequest publishRequest)`
 
 You can create a subscriber and start receiving messages from a subscription as
 follows:

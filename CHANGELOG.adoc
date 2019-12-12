@@ -1,5 +1,9 @@
 == (????-??-??) v0.2.0
 
+- Extend `PubsubPublisher` with auxiliary methods.
+
+- Make sure both message payload and attributes cannot be empty.
+
 - Merge `PubsubReceivedMessage` into `PubsubReceivedAckableMessage`. (#19)
 
 == (2019-11-15) v0.1.2
