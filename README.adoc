@@ -65,6 +65,8 @@ dependencies:
 </dependency>
 ```
 
+(Note that the Java 9 module name is `com.vlkan.pubsub`.)
+
 You can create a publisher and publish a message as follows:
 
 ```java
