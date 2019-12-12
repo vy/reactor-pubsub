@@ -18,6 +18,7 @@ package com.vlkan.pubsub;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.vlkan.pubsub.model.PubsubAckRequest;
 import com.vlkan.pubsub.model.PubsubPublishRequest;
 import com.vlkan.pubsub.model.PubsubPublishResponse;
@@ -51,10 +52,25 @@ public class PubsubClient {
 
     private static final class DefaultObjectMapperHolder {
 
-        private static final ObjectMapper INSTANCE = new ObjectMapper()
-                // To allow backward-compatible future enhancements in the
-                // protocol, disable failure on unknown properties.
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        private static final ObjectMapper INSTANCE = createInstance();
+
+        private static ObjectMapper createInstance() {
+
+            ObjectMapper mapper = new ObjectMapper()
+                    // To allow backward-compatible future enhancements in the
+                    // protocol, disable failure on unknown properties.
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            // Add the Afterburner module, if it is in the classpath.
+            // noinspection EmptyTryBlock
+            try {
+                AfterburnerModule afterburnerModule = new AfterburnerModule();
+                mapper.registerModule(afterburnerModule);
+            } catch (Exception ignored) {}
+
+            return mapper;
+
+        }
 
     }
 
