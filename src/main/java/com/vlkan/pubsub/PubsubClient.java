@@ -342,7 +342,7 @@ public class PubsubClient {
     private ByteBuf serializeRequestPayload(Object requestPayload) {
         try {
             byte[] requestPayloadJsonBytes = objectMapper.writeValueAsBytes(requestPayload);
-            return Unpooled.copiedBuffer(requestPayloadJsonBytes);
+            return Unpooled.wrappedBuffer(requestPayloadJsonBytes);
         } catch (IOException error) {
             @Nullable String requestPayloadClassName = requestPayload != null
                     ? requestPayload.getClass().getCanonicalName()
