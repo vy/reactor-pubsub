@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Jackson-(de)serializable Pub/Sub received (ack'able) message model.
+ * Jackson-(de)serializable Pub/Sub received message model.
  */
 public class PubsubReceivedMessage {
 
@@ -51,6 +51,9 @@ public class PubsubReceivedMessage {
         this.embedding = Objects.requireNonNull(embedding, "embedding");
     }
 
+    /**
+     * ID to used for acknowledging the received message.
+     */
     public String getAckId() {
         return ackId;
     }
@@ -60,6 +63,10 @@ public class PubsubReceivedMessage {
         return embedding.getPublishInstant();
     }
 
+    /**
+     * ID assigned by the server when the message is published.
+     * Guaranteed to be unique within the topic.
+     */
     @JsonIgnore
     public String getId() {
         return embedding.getId();
