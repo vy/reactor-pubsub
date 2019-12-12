@@ -38,11 +38,14 @@ public enum MicrometerHelpers {;
         return Mono
                 .fromCallable(System::nanoTime)
                 .flatMap(startInstantNanos -> mono
-                        .doOnSuccessOrError((ignoredValue, error) -> {
+                        .doOnSuccess(ignored -> {
                             long durationNanos = System.nanoTime() - startInstantNanos;
-                            Timer timer = error == null
-                                    ? createSuccessTimer(meterRegistry, meterName, timerByKey, key, tagSupplier)
-                                    : createFailureTimer(meterRegistry, meterName, timerByKey, key, tagSupplier);
+                            Timer timer = createSuccessTimer(meterRegistry, meterName, timerByKey, key, tagSupplier);
+                            timer.record(durationNanos, TimeUnit.NANOSECONDS);
+                        })
+                        .doOnError(ignored -> {
+                            long durationNanos = System.nanoTime() - startInstantNanos;
+                            Timer timer = createFailureTimer(meterRegistry, meterName, timerByKey, key, tagSupplier);
                             timer.record(durationNanos, TimeUnit.NANOSECONDS);
                         }));
     }
