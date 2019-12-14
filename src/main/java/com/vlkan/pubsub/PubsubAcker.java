@@ -80,7 +80,9 @@ public class PubsubAcker {
 
     public Mono<Void> ack(PubsubAckRequest ackRequest) {
         Objects.requireNonNull(ackRequest, "ackRequest");
-        return client.ack(config.getProjectName(), config.getSubscriptionName(), ackRequest);
+        return client
+                .ack(config.getProjectName(), config.getSubscriptionName(), ackRequest)
+                .checkpoint("ack");
     }
 
     public static Builder builder() {

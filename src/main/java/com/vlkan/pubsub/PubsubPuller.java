@@ -65,7 +65,8 @@ public class PubsubPuller {
     public Mono<PubsubPullResponse> pullOne() {
         return client
                 .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
-                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty());
+                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty())
+                .checkpoint("pullOne");
     }
 
     public Flux<PubsubPullResponse> pullAll() {
