@@ -25,9 +25,13 @@ public class PubsubPullerConfig {
 
     public static final Duration DEFAULT_PULL_PERIOD = Duration.ZERO;
 
+    public static final int DEFAULT_PULL_CONCURRENCY = Runtime.getRuntime().availableProcessors();
+
     private final int pullBufferSize;
 
     private final Duration pullPeriod;
+
+    private final int pullConcurrency;
 
     private final String projectName;
 
@@ -36,6 +40,7 @@ public class PubsubPullerConfig {
     private PubsubPullerConfig(Builder builder) {
         this.pullBufferSize = builder.pullBufferSize;
         this.pullPeriod = builder.pullPeriod;
+        this.pullConcurrency = builder.pullConcurrency;
         this.projectName = builder.projectName;
         this.subscriptionName = builder.subscriptionName;
     }
@@ -46,6 +51,10 @@ public class PubsubPullerConfig {
 
     public Duration getPullPeriod() {
         return pullPeriod;
+    }
+
+    public int getPullConcurrency() {
+        return pullConcurrency;
     }
 
     public String getProjectName() {
@@ -62,6 +71,7 @@ public class PubsubPullerConfig {
         if (object == null || getClass() != object.getClass()) return false;
         PubsubPullerConfig that = (PubsubPullerConfig) object;
         return pullBufferSize == that.pullBufferSize &&
+                pullConcurrency == that.pullConcurrency &&
                 pullPeriod.equals(that.pullPeriod) &&
                 projectName.equals(that.projectName) &&
                 subscriptionName.equals(that.subscriptionName);
@@ -71,6 +81,7 @@ public class PubsubPullerConfig {
     public int hashCode() {
         return Objects.hash(
                 pullBufferSize,
+                pullConcurrency,
                 pullPeriod,
                 projectName,
                 subscriptionName);
@@ -94,6 +105,8 @@ public class PubsubPullerConfig {
 
         private Duration pullPeriod = DEFAULT_PULL_PERIOD;
 
+        private int pullConcurrency = DEFAULT_PULL_CONCURRENCY;
+
         private String projectName;
 
         private String subscriptionName;
@@ -111,6 +124,15 @@ public class PubsubPullerConfig {
 
         public Builder setPullPeriod(Duration pullPeriod) {
             this.pullPeriod = Objects.requireNonNull(pullPeriod, "pullPeriod");
+            return this;
+        }
+
+        public Builder setPullConcurrency(int pullConcurrency) {
+            if (pullConcurrency < 1) {
+                throw new IllegalArgumentException(
+                        "was expecting a non-zero positive pull concurrency");
+            }
+            this.pullConcurrency = pullConcurrency;
             return this;
         }
 

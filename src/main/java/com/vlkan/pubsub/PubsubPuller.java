@@ -70,11 +70,14 @@ public class PubsubPuller {
     }
 
     public Flux<PubsubPullResponse> pullAll() {
-        return client
-                .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
-                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty())
-                .transform(this::delayEmptyPullsIfNecessary)
-                .repeat()
+        return Flux
+                .range(0, Integer.MAX_VALUE)
+                .flatMap(
+                        ignored -> client
+                                .pull(config.getProjectName(), config.getSubscriptionName(), pullRequest)
+                                .filter(pullResponse -> !pullResponse.getReceivedMessages().isEmpty())
+                                .transform(this::delayEmptyPullsIfNecessary),
+                        config.getPullConcurrency())
                 .checkpoint("pullAll");
     }
 
