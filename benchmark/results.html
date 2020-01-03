@@ -1,0 +1,770 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>reactor-pubsub Benchmark Results</title>
+</head>
+<body>
+    <style>
+        .results th, .results td { padding: 0.3em }
+        .results td { text-align: right }
+        .results td.benchmark_time_bar { text-align: left }
+        .results th { background-color: #cfcfcf }
+    </style>
+
+    <p>
+        Timing results for delivering (pull &amp; ack) a total payload of
+        781 MiB using different pull batch size, pull concurrency, and
+        message payload lengths.
+    </p>
+    <p>
+        Best result is 2,083 ms achieved by pull batch size 50, pull
+        concurrency 5, and message payload length 16 KiB.
+    </p>
+
+    <dl>
+        <dt>CPU</dt>
+        <dd>Intel i7 2.70GHz (x86-64, confined <code>java</code> process to 2 cores
+        using <a href="http://www.man7.org/linux/man-pages/man1/taskset.1.html"
+        ><code>taskset -c 0</code></a>)</dd>
+        <dt>JVM</dt>
+        <dd>OpenJDK 64-Bit (AdoptOpenJDK, build 25.232-b09) with flags
+        <code>-XX:+TieredCompilation -Xmx1g --illegal-access=deny</code></dd>
+        <dt>OS</dt>
+        <dd>Xubuntu 18.04.3 (4.15.0-70-generic, x86-64)</dd>
+    </dl>
+
+    <h1>Combined Results</h1>
+    <img src="results.png"/>
+
+    <div class="results">
+        <h1>Results for messages of size 1 KiB</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Batch Size</th>
+                    <th>Concurrency</th>
+                    <th colspan="2">Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="message_count" rowspan=6>50</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">8,813</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉ (76%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">6,292</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉▉▉▉ (48%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">5,156</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉ (35%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">5,088</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉ (34%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">5,118</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉ (34%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">5,219</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉ (36%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>100</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">6,888</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉▉▉▉▉ (55%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">4,854</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉ (31%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">4,146</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (23%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">3,881</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (20%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">3,893</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (21%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">3,975</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (21%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>500</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">6,590</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉▉▉▉ (51%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">5,145</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉ (35%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,078</td>
+                    <td class="benchmark_time_bar">▉▉▉ (11%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">3,265</td>
+                    <td class="benchmark_time_bar">▉▉▉ (13%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">3,065</td>
+                    <td class="benchmark_time_bar">▉▉▉ (11%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">3,558</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (17%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>1,000</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">5,900</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉▉▉▉ (43%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,501</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (16%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,474</td>
+                    <td class="benchmark_time_bar">▉▉▉ (16%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">3,457</td>
+                    <td class="benchmark_time_bar">▉▉▉ (16%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">3,327</td>
+                    <td class="benchmark_time_bar">▉▉▉ (14%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">3,399</td>
+                    <td class="benchmark_time_bar">▉▉▉ (15%)</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+    <div class="results">
+        <h1>Results for messages of size 4 KiB</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Batch Size</th>
+                    <th>Concurrency</th>
+                    <th colspan="2">Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="message_count" rowspan=6>50</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,696</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉ (30%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,688</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (18%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,030</td>
+                    <td class="benchmark_time_bar">▉▉▉ (11%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,502</td>
+                    <td class="benchmark_time_bar">▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,575</td>
+                    <td class="benchmark_time_bar">▉▉ (6%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,965</td>
+                    <td class="benchmark_time_bar">▉▉ (10%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>100</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,091</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (23%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,938</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (21%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,909</td>
+                    <td class="benchmark_time_bar">▉▉ (9%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,367</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,225</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,643</td>
+                    <td class="benchmark_time_bar">▉▉ (6%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>500</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,350</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (26%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">2,970</td>
+                    <td class="benchmark_time_bar">▉▉ (10%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,657</td>
+                    <td class="benchmark_time_bar">▉▉ (7%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,833</td>
+                    <td class="benchmark_time_bar">▉▉ (9%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">3,201</td>
+                    <td class="benchmark_time_bar">▉▉▉ (13%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,545</td>
+                    <td class="benchmark_time_bar">▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>1,000</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,584</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉ (28%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,443</td>
+                    <td class="benchmark_time_bar">▉▉▉ (15%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,408</td>
+                    <td class="benchmark_time_bar">▉▉▉ (15%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,217</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,309</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,418</td>
+                    <td class="benchmark_time_bar">▉ (4%)</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+    <div class="results">
+        <h1>Results for messages of size 8 KiB</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Batch Size</th>
+                    <th>Concurrency</th>
+                    <th colspan="2">Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="message_count" rowspan=6>50</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">3,987</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (22%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,683</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (18%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,841</td>
+                    <td class="benchmark_time_bar">▉▉ (9%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,419</td>
+                    <td class="benchmark_time_bar">▉ (4%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,239</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,159</td>
+                    <td class="benchmark_time_bar">▉ (1%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>100</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">3,892</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (21%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">4,393</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (26%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,129</td>
+                    <td class="benchmark_time_bar">▉ (1%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,305</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,379</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,683</td>
+                    <td class="benchmark_time_bar">▉▉ (7%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>500</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,072</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (23%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,258</td>
+                    <td class="benchmark_time_bar">▉▉▉ (13%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,351</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,126</td>
+                    <td class="benchmark_time_bar">▉ (0%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,491</td>
+                    <td class="benchmark_time_bar">▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,794</td>
+                    <td class="benchmark_time_bar">▉▉ (8%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>1,000</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,348</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (26%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,308</td>
+                    <td class="benchmark_time_bar">▉▉▉ (14%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,352</td>
+                    <td class="benchmark_time_bar">▉ (3%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,565</td>
+                    <td class="benchmark_time_bar">▉▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,513</td>
+                    <td class="benchmark_time_bar">▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,260</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+    <div class="results">
+        <h1>Results for messages of size 16 KiB</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Batch Size</th>
+                    <th>Concurrency</th>
+                    <th colspan="2">Time (ms)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="message_count" rowspan=6>50</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,303</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (25%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,860</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (20%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,123</td>
+                    <td class="benchmark_time_bar">▉▉▉ (12%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,136</td>
+                    <td class="benchmark_time_bar">▉ (1%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,083</td>
+                    <td class="benchmark_time_bar">▉ (0%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,285</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>100</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">3,602</td>
+                    <td class="benchmark_time_bar">▉▉▉▉ (17%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,093</td>
+                    <td class="benchmark_time_bar">▉▉▉ (11%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,149</td>
+                    <td class="benchmark_time_bar">▉ (1%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,271</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,510</td>
+                    <td class="benchmark_time_bar">▉ (5%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,224</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>500</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,261</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (25%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">3,397</td>
+                    <td class="benchmark_time_bar">▉▉▉ (15%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">3,356</td>
+                    <td class="benchmark_time_bar">▉▉▉ (14%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">2,959</td>
+                    <td class="benchmark_time_bar">▉▉ (10%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">2,274</td>
+                    <td class="benchmark_time_bar">▉ (2%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">3,055</td>
+                    <td class="benchmark_time_bar">▉▉▉ (11%)</td>
+                </tr>
+
+                <tr>
+                    <td class="message_count" rowspan=6>1,000</td>
+                    <td class="concurrency">1</td>
+                    <td class="benchmark_time">4,830</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉▉ (31%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">2</td>
+                    <td class="benchmark_time">4,114</td>
+                    <td class="benchmark_time_bar">▉▉▉▉▉ (23%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">3</td>
+                    <td class="benchmark_time">2,403</td>
+                    <td class="benchmark_time_bar">▉ (4%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">4</td>
+                    <td class="benchmark_time">3,332</td>
+                    <td class="benchmark_time_bar">▉▉▉ (14%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">5</td>
+                    <td class="benchmark_time">3,232</td>
+                    <td class="benchmark_time_bar">▉▉▉ (13%)</td>
+                </tr>
+
+                <tr>
+                    
+                    <td class="concurrency">6</td>
+                    <td class="benchmark_time">2,968</td>
+                    <td class="benchmark_time_bar">▉▉ (10%)</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+</body>
+</html>

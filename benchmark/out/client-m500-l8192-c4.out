@@ -1,0 +1,15 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.vlkan:reactor-pubsub >----------------------
+[INFO] Building Reactive Google Cloud Pub/Sub driver with Reactor 0.1.3-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ reactor-pubsub ---
+22:36:32.693 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - baseUrl = http://localhost:7777
+22:36:32.696 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - concurrency = 4
+22:36:32.697 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - pullCount = 200
+22:36:32.697 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - warmUpPeriodSeconds = 30
+22:36:33.286 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - [warm-up] started
+22:37:03.309 [parallel-1] INFO  com.vlkan.pubsub.BenchmarkClient - [warm-up] pulled and ack'ed 1141500 messages in 30014 ms
+22:37:03.310 [com.vlkan.pubsub.BenchmarkClient.main()] INFO  com.vlkan.pubsub.BenchmarkClient - [benchmark] started
+22:37:05.437 [reactor-http-epoll-2] INFO  com.vlkan.pubsub.BenchmarkClient - [benchmark] pulled and ack'ed 100000 messages in 2126 ms

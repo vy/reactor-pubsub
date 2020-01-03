@@ -452,6 +452,32 @@ PubsubAcker acker = PubsubAcker
         .build();
 ```
 
+=== How fast is ``reactor-pubsub``?
+
+One of the most frequent questions `reactor-pubsub` is challenged with is how
+does it perform given the official Pub/Sub client uses Protobuf over HTTP/2
+(gRPC), whereas `reactor-pubsub` uses JSON over HTTP/1?
+
+Before going into convincing figures to elaborate on ``reactor-pubsub``s
+performance characteristics, there is one thing that deserves attention in
+particular: _JSON over HTTP/1 is a deliberate design decision for simplicity_
+rather than a fallback due to technical limitations. Even though it is
+opinionated, ``reactor-pubsub`` strives to serve as a Pub/Sub client that
+leverages frequently used tools (e.g., JSON) and idioms Java developers are
+accustomed to. Further, in case of failures, it should be trivial to spot the
+smoking gun using a decent IDE debugger.
+
+`reactor-pubsub` source code ships a reproducible link:benchmark[benchmark]
+along with its link:benchmark/results.html[results]. As shared there, one can
+transmit a payload of 781 MiB in 2,083 ms using two 2.70GHz CPU cores, pull
+batch size 50, pull concurrency 5, and message payload length 16 KiB. That is,
+*11,998 messages per second on a single core!* Do you still need more juice? 🙇
+Go ahead and create a ticket with your use case, observed performance, and
+implementation details.
+
+image:benchmark/results.png[Benchmark Results]
+
+
 == Historical account
 
 I (_Volkan Yazıcı_) would like to take this opportunity to share the historical

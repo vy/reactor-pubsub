@@ -62,7 +62,6 @@ public class PubsubClient {
                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
             // Add the Afterburner module, if it is in the classpath.
-            // noinspection EmptyTryBlock
             try {
                 AfterburnerModule afterburnerModule = new AfterburnerModule();
                 mapper.registerModule(afterburnerModule);
@@ -145,9 +144,7 @@ public class PubsubClient {
             String projectName,
             String subscriptionName,
             PubsubPullRequest pullRequest) {
-        String requestUrl = String.format(
-                "%s/v1/projects/%s/subscriptions/%s:pull",
-                config.getBaseUrl(), projectName, subscriptionName);
+        String requestUrl = config.getBaseUrl() + createPullRequestRelativePath(projectName, subscriptionName);
         Duration timeout = pullRequest.isImmediateReturnEnabled()
                 ? config.getPullTimeout()
                 : Duration.ZERO;
@@ -155,6 +152,12 @@ public class PubsubClient {
                 ? executeRequest(requestUrl, pullRequest, PubsubPullResponse.class, timeout)
                 : pullMeasured(projectName, subscriptionName, pullRequest, requestUrl, timeout);
         return pullResponseMono.checkpoint(requestUrl);
+    }
+
+    static String createPullRequestRelativePath(String projectName, String subscriptionName) {
+        return String.format(
+                "/v1/projects/%s/subscriptions/%s:pull",
+                projectName, subscriptionName);
     }
 
     private Mono<PubsubPullResponse> pullMeasured(
@@ -187,13 +190,17 @@ public class PubsubClient {
             String projectName,
             String subscriptionName,
             PubsubAckRequest ackRequest) {
-        String requestUrl = String.format(
-                "%s/v1/projects/%s/subscriptions/%s:acknowledge",
-                config.getBaseUrl(), projectName, subscriptionName);
+        String requestUrl = config.getBaseUrl() + createAckRequestRelativePath(projectName, subscriptionName);
         Mono<Void> ackResponseMono = meterRegistry == null
                 ? executeRequest(requestUrl, ackRequest, Void.class, config.getAckTimeout())
                 : ackMeasured(projectName, subscriptionName, ackRequest, requestUrl);
         return ackResponseMono.checkpoint(requestUrl);
+    }
+
+    static String createAckRequestRelativePath(String projectName, String subscriptionName) {
+        return String.format(
+                "/v1/projects/%s/subscriptions/%s:acknowledge",
+                projectName, subscriptionName);
     }
 
     private Mono<Void> ackMeasured(
@@ -225,13 +232,17 @@ public class PubsubClient {
             String projectName,
             String topicName,
             PubsubPublishRequest publishRequest) {
-        String requestUrl = String.format(
-                "%s/v1/projects/%s/topics/%s:publish",
-                config.getBaseUrl(), projectName, topicName);
+        String requestUrl = config.getBaseUrl() + createPublishRequestRelativePath(projectName, topicName);
         Mono<PubsubPublishResponse> publishResponseMono = meterRegistry == null
                 ? executeRequest(requestUrl, publishRequest, PubsubPublishResponse.class, config.getPublishTimeout())
                 : publishMeasured(projectName, topicName, publishRequest, requestUrl);
         return publishResponseMono.checkpoint(requestUrl);
+    }
+
+    static String createPublishRequestRelativePath(String projectName, String topicName) {
+        return String.format(
+                "/v1/projects/%s/topics/%s:publish",
+                projectName, topicName);
     }
 
     private Mono<PubsubPublishResponse> publishMeasured(
@@ -310,7 +321,8 @@ public class PubsubClient {
                                 handleResponse(responsePayloadClass, response, responsePayloadByteBufMono))
                         .transform(responseMono -> Duration.ZERO.equals(timeout)
                                 ? responseMono
-                                : responseMono.timeout(timeout)));
+                                : responseMono.timeout(timeout)))
+                .checkpoint("executeRequest");
     }
 
     private void setRequestHeaders(HttpHeaders headers, String authorizationHeaderValue) {

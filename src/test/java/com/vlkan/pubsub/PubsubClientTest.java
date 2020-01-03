@@ -55,17 +55,14 @@ public class PubsubClientTest {
 
     private static final String TOPIC_NAME = "test-topic";
 
-    private static final String PULL_REQUEST_URL = String.format(
-            "/v1/projects/%s/subscriptions/%s:pull",
-            PROJECT_NAME, SUBSCRIPTION_NAME);
+    private static final String PULL_REQUEST_RELATIVE_PATH =
+            PubsubClient.createPullRequestRelativePath(PROJECT_NAME, SUBSCRIPTION_NAME);
 
-    private static final String ACK_REQUEST_URL = String.format(
-            "/v1/projects/%s/subscriptions/%s:acknowledge",
-            PROJECT_NAME, SUBSCRIPTION_NAME);
+    private static final String ACK_REQUEST_RELATIVE_PATH =
+            PubsubClient.createAckRequestRelativePath(PROJECT_NAME, SUBSCRIPTION_NAME);
 
-    private static final String PUBLISH_REQUEST_URL = String.format(
-            "/v1/projects/%s/topics/%s:publish",
-            PROJECT_NAME, TOPIC_NAME);
+    private static final String PUBLISH_REQUEST_RELATIVE_PATH =
+            PubsubClient.createPublishRequestRelativePath(PROJECT_NAME, TOPIC_NAME);
 
     private static final PubsubPullRequest PULL_REQUEST =
             new PubsubPullRequest(true, Integer.MAX_VALUE);
@@ -143,7 +140,7 @@ public class PubsubClientTest {
         String pullResponseJson = JacksonHelpers.writeValueAsString(PULL_RESPONSE);
         serverMockRule.addStubMapping(
                 WireMock.stubFor(WireMock
-                        .post(WireMock.urlEqualTo(PULL_REQUEST_URL))
+                        .post(WireMock.urlEqualTo(PULL_REQUEST_RELATIVE_PATH))
                         .willReturn(WireMock
                                 .aResponse()
                                 .withHeader(
@@ -154,7 +151,7 @@ public class PubsubClientTest {
         // Stub ack response.
         serverMockRule.addStubMapping(
                 WireMock.stubFor(WireMock
-                        .post(WireMock.urlEqualTo(ACK_REQUEST_URL))
+                        .post(WireMock.urlEqualTo(ACK_REQUEST_RELATIVE_PATH))
                         .willReturn(WireMock
                                 .aResponse()
                                 .withHeader(
@@ -165,7 +162,7 @@ public class PubsubClientTest {
         String publishResponseJson = JacksonHelpers.writeValueAsString(PUBLISH_RESPONSE);
         serverMockRule.addStubMapping(
                 WireMock.stubFor(WireMock
-                        .post(WireMock.urlEqualTo(PUBLISH_REQUEST_URL))
+                        .post(WireMock.urlEqualTo(PUBLISH_REQUEST_RELATIVE_PATH))
                         .willReturn(WireMock
                                 .aResponse()
                                 .withHeader(
@@ -256,7 +253,7 @@ public class PubsubClientTest {
         int responseDelayMillis = Math.toIntExact(pullTimeout.toMillis()) * 2;
         serverMockRule.addStubMapping(
                 WireMock.stubFor(WireMock
-                        .post(WireMock.urlEqualTo(PULL_REQUEST_URL))
+                        .post(WireMock.urlEqualTo(PULL_REQUEST_RELATIVE_PATH))
                         .willReturn(WireMock
                                 .aResponse()
                                 .withFixedDelay(responseDelayMillis)
@@ -302,7 +299,7 @@ public class PubsubClientTest {
         int responseDelayMillis = 100;
         serverMockRule.addStubMapping(
                 WireMock.stubFor(WireMock
-                        .post(WireMock.urlEqualTo(PULL_REQUEST_URL))
+                        .post(WireMock.urlEqualTo(PULL_REQUEST_RELATIVE_PATH))
                         .willReturn(WireMock
                                 .aResponse()
                                 .withFixedDelay(responseDelayMillis)
