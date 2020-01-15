@@ -18,6 +18,7 @@ package com.vlkan.pubsub;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.vlkan.pubsub.util.BoundedScheduledThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,21 +42,23 @@ public class PubsubAccessTokenCache {
     private static final class DefaultExecutorServiceHolder {
 
         private static final ScheduledExecutorService INSTANCE =
-                new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+                new BoundedScheduledThreadPoolExecutor(
+                        100,
+                        new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
 
-                    private final AtomicInteger threadCounter = new AtomicInteger(0);
+                            private final AtomicInteger threadCounter = new AtomicInteger(0);
 
-                    @Override
-                    public Thread newThread(Runnable runnable) {
-                        String name = String.format(
-                                "PubsubAccessTokenCacheWorker-%02d",
-                                threadCounter.incrementAndGet());
-                        Thread thread = new Thread(runnable, name);
-                        thread.setDaemon(true);
-                        return thread;
-                    }
+                            @Override
+                            public Thread newThread(Runnable runnable) {
+                                String name = String.format(
+                                        "PubsubAccessTokenCacheWorker-%02d",
+                                        threadCounter.incrementAndGet());
+                                Thread thread = new Thread(runnable, name);
+                                thread.setDaemon(true);
+                                return thread;
+                            }
 
-                });
+                        }));
 
     }
 
