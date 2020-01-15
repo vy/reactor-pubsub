@@ -357,7 +357,7 @@ def report_results_in_html(
         best_payload_length_kib = best_payload_length / 1024
         html_file_handle.write("""
     <p>
-        Timing results for delivering (pull &amp; ack) a total payload of
+        Timing results for retrieving (pull &amp; ack) a total payload of
         {:,.0f} MiB using different pull batch size, pull concurrency, and
         message payload lengths.
     </p>

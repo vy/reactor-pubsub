@@ -528,11 +528,11 @@ smoking gun using a decent IDE debugger.
 
 `reactor-pubsub` source code ships a reproducible link:benchmark[benchmark]
 along with its link:benchmark/results.html[results]. As shared there, one can
-transmit a payload of 781 MiB in 2,083 ms using two 2.70GHz CPU cores, pull
-batch size 50, pull concurrency 5, and message payload length 16 KiB. That is,
-*11,998 messages per second on a single core!* Do you still need more juice? 🙇
-Go ahead and create a ticket with your use case, observed performance, and
-implementation details.
+retrieve (i.e., `pull` & `ack`) a payload of 781 MiB in 2,083 ms using two
+2.70GHz CPU cores, pull batch size 50, pull concurrency 5, and message payload
+length 16 KiB. That is, 11,998 messages per second on a single core!* Do you
+still need more juice? 🙇 Go ahead and create a ticket with your use case,
+observed performance, and implementation details.
 
 image:benchmark/results.png[Benchmark Results]
 
