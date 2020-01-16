@@ -1,4 +1,6 @@
-== (????-??-??) v0.2.0
+== (2020-01-16) v0.2.0
+
+- Add `PubsubPullerConfig#pullConcurrency` back.
 
 - Add benchmarks.
 
