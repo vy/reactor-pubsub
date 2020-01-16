@@ -25,7 +25,7 @@ public class PubsubPullerConfig {
 
     public static final Duration DEFAULT_PULL_PERIOD = Duration.ZERO;
 
-    public static final int DEFAULT_PULL_CONCURRENCY = Runtime.getRuntime().availableProcessors();
+    public static final int DEFAULT_PULL_CONCURRENCY = Runtime.getRuntime().availableProcessors() * 2 + 1;
 
     private final int pullBufferSize;
 
