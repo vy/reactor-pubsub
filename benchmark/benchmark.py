@@ -75,7 +75,7 @@ def get_server_output_filepath(message_count, payload_length):
     return os.path.join(
         BENCHMARK_DIR,
         "out",
-        "server-m{}-l{}.out".format(message_count, payload_length))
+        "http12-server-m{}-l{}.out".format(message_count, payload_length))
 
 
 def start_server(message_count, payload_length):
@@ -91,7 +91,7 @@ def start_server(message_count, payload_length):
          "-c", "0",
          "mvn", "exec:java",
          "-Dexec.classpathScope=test",
-         "-Dexec.mainClass=com.vlkan.pubsub.BenchmarkServer",
+         "-Dexec.mainClass=com.vlkan.pubsub.BenchmarkHttp12Server",
          "-Dbenchmark.messageCount={}".format(message_count),
          "-Dbenchmark.payloadLength={}".format(payload_length)],
         cwd=PROJECT_DIR,
@@ -142,7 +142,7 @@ def get_client_output_filepath(message_count, payload_length, concurrency):
     return os.path.join(
         BENCHMARK_DIR,
         "out",
-        "client-m{}-l{}-c{}.out".format(
+        "http12-client-m{}-l{}-c{}.out".format(
             message_count, payload_length, concurrency))
 
 
@@ -162,7 +162,7 @@ def run_client(message_count, payload_length, concurrency):
              "-c", taskset_cpus,
              "mvn", "exec:java",
              "-Dexec.classpathScope=test",
-             "-Dexec.mainClass=com.vlkan.pubsub.BenchmarkClient",
+             "-Dexec.mainClass=com.vlkan.pubsub.BenchmarkHttp12Client",
              "-Dbenchmark.concurrency={}".format(concurrency),
              "-Dbenchmark.pullCount={}".format(pull_count)],
             cwd=PROJECT_DIR,

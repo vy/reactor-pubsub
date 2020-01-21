@@ -1,0 +1,15 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.vlkan:reactor-pubsub >----------------------
+[INFO] Building Reactive Google Cloud Pub/Sub driver with Reactor 0.1.3-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ reactor-pubsub ---
+22:39:04.364 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - host = localhost
+22:39:04.383 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - port = 7777
+22:39:04.383 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - distinctResponseCount = 10
+22:39:04.384 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - messageCount = 500
+22:39:04.384 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - payloadLength = 4096
+22:39:04.384 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - building responses
+22:39:05.828 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - starting server
+22:39:06.139 [com.vlkan.pubsub.BenchmarkHttp12Server.main()] INFO  com.vlkan.pubsub.BenchmarkHttp12Server - started server
