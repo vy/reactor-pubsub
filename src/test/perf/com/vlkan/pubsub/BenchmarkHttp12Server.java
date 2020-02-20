@@ -2,7 +2,6 @@ package com.vlkan.pubsub;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vlkan.pubsub.model.PubsubPublishResponse;
 import com.vlkan.pubsub.model.PubsubPullResponse;
 import com.vlkan.pubsub.model.PubsubReceivedMessage;
 import com.vlkan.pubsub.model.PubsubReceivedMessageEmbedding;
@@ -24,20 +23,14 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class BenchmarkHttp12Server implements Callable<Integer> {
+public class BenchmarkHttp12Server implements BenchmarkServer {
 
     static { Epoll.ensureAvailability(); }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkHttp12Server.class);
-
-    private static final Random RANDOM = new Random(0);
-
-    private static final Instant START_INSTANT = Instant.parse("2019-12-13T00:00:00Z");
 
     private enum RequestRelativePath {;
 
@@ -51,11 +44,6 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
                         BenchmarkConstants.PROJECT_NAME,
                         BenchmarkConstants.SUBSCRIPTION_NAME);
 
-        private static final String PUBLISH =
-                PubsubClient.createPublishRequestRelativePath(
-                        BenchmarkConstants.PROJECT_NAME,
-                        BenchmarkConstants.TOPIC_NAME);
-
     }
 
     private final String host;
@@ -64,36 +52,29 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
 
     private final int distinctResponseCount;
 
-    private final int messageCount;
+    private final int perPullMessageCount;
 
-    private final int payloadLength;
+    private final int messagePayloadLength;
 
     private BenchmarkHttp12Server(
             String host,
             int port,
             int distinctResponseCount,
-            int messageCount,
-            int payloadLength) {
+            int perPullMessageCount,
+            int messagePayloadLength) {
         this.host = host;
         this.port = port;
         this.distinctResponseCount = distinctResponseCount;
-        this.messageCount = messageCount;
-        this.payloadLength = payloadLength;
-        LOGGER.info("host = {}", host);
-        LOGGER.info("port = {}", port);
-        LOGGER.info("distinctResponseCount = {}", distinctResponseCount);
-        LOGGER.info("messageCount = {}", messageCount);
-        LOGGER.info("payloadLength = {}", payloadLength);
+        this.perPullMessageCount = perPullMessageCount;
+        this.messagePayloadLength = messagePayloadLength;
     }
 
     @Override
-    public Integer call() {
+    public void run() {
 
         LOGGER.info("building responses");
         List<PubsubPullResponse> pullResponses = createPullResponses();
         List<byte[]> jsonPullResponsePayloads = createPullResponsePayloads(pullResponses);
-        List<PubsubPublishResponse> publishResponses = createPublishResponses();
-        List<byte[]> jsonPublishResponsePayloads = createPublishResponsePayloads(publishResponses);
 
         LOGGER.info("starting server");
         HttpServer
@@ -107,20 +88,12 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
                                         response))
                         .post(
                                 RequestRelativePath.ACK,
-                                BenchmarkHttp12Server::handleAck)
-                        .post(
-                                RequestRelativePath.PUBLISH,
-                                (request, response) -> handlePublish(
-                                        jsonPublishResponsePayloads,
-                                        request,
-                                        response)))
+                                BenchmarkHttp12Server::handleAck))
                 .host(host)
                 .port(port)
                 .bindUntilJavaShutdown(
                         Duration.ofHours(1),
                         ignored -> LOGGER.info("started server"));
-
-        return 0;
 
     }
 
@@ -135,7 +108,7 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
     private List<PubsubReceivedMessage> createReceivedMessages(
             int pullResponseIndex) {
         return IntStream
-                .range(0, messageCount)
+                .range(0, perPullMessageCount)
                 .mapToObj(messageIndex -> createReceivedMessage(pullResponseIndex, messageIndex))
                 .collect(Collectors.toList());
     }
@@ -143,7 +116,7 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
     private PubsubReceivedMessage createReceivedMessage(
             int pullResponseIndex,
             int messageIndex) {
-        String ackId = String.format("ackId-%04d-%04d", pullResponseIndex, messageIndex);
+        String ackId = BenchmarkPayloads.createAckId(pullResponseIndex, messageIndex);
         PubsubReceivedMessageEmbedding embedding =
                 createReceivedMessageEmbedding(pullResponseIndex, messageIndex);
         return new PubsubReceivedMessage(ackId, embedding);
@@ -152,51 +125,19 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
     private PubsubReceivedMessageEmbedding createReceivedMessageEmbedding(
             int pullResponseIndex,
             int messageIndex) {
-        Instant publishInstant = START_INSTANT
+        Instant publishInstant = BenchmarkPayloads
+                .START_INSTANT
                 .plus(Duration.ofDays(pullResponseIndex))
                 .plus(Duration.ofSeconds(messageIndex));
-        String id = String.format("id-%04d-%04d", pullResponseIndex, messageIndex);
-        byte[] payload = createMessagePayload();
+        String id = BenchmarkPayloads.createMessageId(pullResponseIndex, messageIndex);
+        byte[] payload = BenchmarkPayloads.createRandomBytes(messagePayloadLength);
         Map<String, String> attributes = Collections.emptyMap();
         return new PubsubReceivedMessageEmbedding(publishInstant, id, payload, attributes);
-    }
-
-    private byte[] createMessagePayload() {
-        byte[] payload = new byte[payloadLength];
-        for (int i = 0; i < payloadLength; i++) {
-            payload[i] = (byte) RANDOM.nextInt();
-        }
-        return payload;
     }
 
     private static List<byte[]> createPullResponsePayloads(
             List<PubsubPullResponse> pullResponses) {
         return pullResponses
-                .stream()
-                .map(BenchmarkHttp12Server::jsonSerialize)
-                .collect(Collectors.toList());
-    }
-
-    private List<PubsubPublishResponse> createPublishResponses() {
-        return IntStream
-                .range(0, distinctResponseCount)
-                .mapToObj(this::createPublishResponse)
-                .collect(Collectors.toList());
-    }
-
-    private PubsubPublishResponse createPublishResponse(int publishResponseIndex) {
-        List<String> messageIds = IntStream
-                .range(0, messageCount)
-                .mapToObj(messageId -> String.format(
-                        "messageId-%04d-%04d",
-                        publishResponseIndex, messageId))
-                .collect(Collectors.toList());
-        return new PubsubPublishResponse(messageIds);
-    }
-
-    private static List<byte[]> createPublishResponsePayloads(
-            List<PubsubPublishResponse> publishResponses) {
-        return publishResponses
                 .stream()
                 .map(BenchmarkHttp12Server::jsonSerialize)
                 .collect(Collectors.toList());
@@ -220,7 +161,7 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
                 .then(Mono.defer(() -> {
 
                     // Determine the response.
-                    int responsePayloadIndex = RANDOM.nextInt(responsePayloads.size());
+                    int responsePayloadIndex = BenchmarkPayloads.RANDOM.nextInt(responsePayloads.size());
                     ByteBuf responsePayload =
                             Unpooled.wrappedBuffer(
                                     responsePayloads.get(responsePayloadIndex));
@@ -247,38 +188,8 @@ public class BenchmarkHttp12Server implements Callable<Integer> {
                         .then()));
     }
 
-    private static Publisher<Void> handlePublish(
-            List<byte[]> responsePayloads,
-            HttpServerRequest request,
-            HttpServerResponse response) {
-        return request
-                .receive()
-                .then(Mono.defer(() -> {
-
-                    // Determine the response.
-                    int responsePayloadIndex = RANDOM.nextInt(responsePayloads.size());
-                    ByteBuf responsePayload =
-                            Unpooled.wrappedBuffer(
-                                    responsePayloads.get(responsePayloadIndex));
-
-                    // Feed the response.
-                    return response
-                            .header(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON)
-                            .send(Mono.just(responsePayload))
-                            .then();
-
-                }));
-    }
-
-    public static void main(String[] args) {
-        String host = BenchmarkHelpers.getStringProperty("benchmark.host", BenchmarkConstants.DEFAULT_SERVER_HOST);
-        int port = BenchmarkHelpers.getIntProperty("benchmark.port", BenchmarkConstants.DEFAULT_SERVER_PORT);
-        int distinctResponseCount = BenchmarkHelpers.getIntProperty("benchmark.distinctResponseCount", 10);
-        int messageCount = BenchmarkHelpers.getIntProperty("benchmark.messageCount", 100);
-        int payloadLength = BenchmarkHelpers.getIntProperty("benchmark.payloadLength", 1024);
-        BenchmarkHttp12Server server = new BenchmarkHttp12Server(host, port, distinctResponseCount, messageCount, payloadLength);
-        int exitCode = server.call();
-        System.exit(exitCode);
+    public static void main(String[] args) throws Exception {
+        BenchmarkServers.run(BenchmarkHttp12Server::new);
     }
 
 }

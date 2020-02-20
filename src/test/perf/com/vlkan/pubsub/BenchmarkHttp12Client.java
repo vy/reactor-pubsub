@@ -7,42 +7,34 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.concurrent.Callable;
 
-public class BenchmarkHttp12Client implements Callable<Integer> {
+public class BenchmarkHttp12Client implements BenchmarkClient {
 
     static { Epoll.ensureAvailability(); }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkHttp12Client.class);
 
-    private static final String DEFAULT_BASE_URL =
-            "http://" + BenchmarkConstants.DEFAULT_SERVER_HOST + ':' + BenchmarkConstants.DEFAULT_SERVER_PORT;
-
     private final String baseUrl;
 
     private final int concurrency;
 
-    private final int pullCount;
+    private final long maxMessageCount;
 
     private final long warmUpPeriodSeconds;
 
     private BenchmarkHttp12Client(
             String baseUrl,
             int concurrency,
-            int pullCount,
+            long maxMessageCount,
             long warmUpPeriodSeconds) {
         this.baseUrl = baseUrl;
         this.concurrency = concurrency;
-        this.pullCount = pullCount;
+        this.maxMessageCount = maxMessageCount;
         this.warmUpPeriodSeconds = warmUpPeriodSeconds;
-        LOGGER.info("baseUrl = {}", baseUrl);
-        LOGGER.info("concurrency = {}", concurrency);
-        LOGGER.info("pullCount = {}", pullCount);
-        LOGGER.info("warmUpPeriodSeconds = {}", warmUpPeriodSeconds);
     }
 
     @Override
-    public Integer call() {
+    public void run() {
 
         // Mock the access token cache.
         PubsubAccessTokenCache accessTokenCache = Mockito.mock(PubsubAccessTokenCache.class);
@@ -88,9 +80,6 @@ public class BenchmarkHttp12Client implements Callable<Integer> {
         pullAndAck(puller, acker, "warm-up", Duration.ofSeconds(warmUpPeriodSeconds));
         pullAndAck(puller, acker, "benchmark", null);
 
-        // Exit with success.
-        return 0;
-
     }
 
     private void pullAndAck(
@@ -105,10 +94,19 @@ public class BenchmarkHttp12Client implements Callable<Integer> {
                         .ackPullResponse(pullResponse)
                         .retry()
                         .thenReturn(pullResponse.getReceivedMessages().size()))
-                .transform(receivedMessageCounts -> timespan != null
-                        ? receivedMessageCounts.take(timespan)
-                        : receivedMessageCounts.take(pullCount))
-                .reduce(0L, Long::sum)
+                .transform(receivedMessageCounts -> {
+                    if (timespan != null) {
+                        return receivedMessageCounts
+                                .take(timespan)
+                                .reduce(0L, Long::sum);
+                    } else {
+                        return receivedMessageCounts
+                                .scan(0L, Long::sum)
+                                .takeWhile(messageCount -> messageCount < maxMessageCount)
+                                .last();
+                    }
+                })
+                .singleOrEmpty()
                 .elapsed()
                 .doOnNext(elapsedMillisAndMessageCount -> {
                     long elapsedMillis = elapsedMillisAndMessageCount.getT1();
@@ -121,14 +119,8 @@ public class BenchmarkHttp12Client implements Callable<Integer> {
                 .block();
     }
 
-    public static void main(String[] args) {
-        String baseUrl = BenchmarkHelpers.getStringProperty("benchmark.baseUrl", DEFAULT_BASE_URL);
-        int concurrency = BenchmarkHelpers.getIntProperty("benchmark.concurrency", 2);
-        int pullCount  = BenchmarkHelpers.getIntProperty("benchmark.pullCount", 1000);
-        int warmUpPeriodSeconds = BenchmarkHelpers.getIntProperty("benchmark.warmUpPeriodSeconds", 30);
-        BenchmarkHttp12Client client = new BenchmarkHttp12Client(baseUrl, concurrency, pullCount, warmUpPeriodSeconds);
-        int exitCode = client.call();
-        System.exit(exitCode);
+    public static void main(String[] args) throws Exception {
+        BenchmarkClients.run(BenchmarkHttp12Client::new);
     }
 
 }

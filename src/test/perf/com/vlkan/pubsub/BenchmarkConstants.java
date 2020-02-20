@@ -8,8 +8,6 @@ enum BenchmarkConstants {;
 
     static final String PROJECT_NAME = "benchmark-project";
 
-    static final String TOPIC_NAME = "benchmark-topic";
-
     static final String SUBSCRIPTION_NAME = "benchmark-subscription";
 
 }

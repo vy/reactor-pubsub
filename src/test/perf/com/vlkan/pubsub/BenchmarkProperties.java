@@ -1,6 +1,6 @@
 package com.vlkan.pubsub;
 
-enum BenchmarkHelpers {;
+enum BenchmarkProperties {;
 
     static String getStringProperty(String key, String defaultValue) {
         return System.getProperty(key, defaultValue);
@@ -10,6 +10,13 @@ enum BenchmarkHelpers {;
         String valueString = System.getProperty(key);
         return valueString != null
                 ? Integer.parseInt(valueString)
+                : defaultValue;
+    }
+
+    static long getLongProperty(String key, long defaultValue) {
+        String valueString = System.getProperty(key);
+        return valueString != null
+                ? Long.parseLong(valueString)
                 : defaultValue;
     }
 
