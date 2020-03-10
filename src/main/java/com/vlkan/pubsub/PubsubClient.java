@@ -41,6 +41,7 @@ import reactor.netty.http.client.HttpClientResponse;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
@@ -343,8 +344,22 @@ public class PubsubClient {
         // Check the response status.
         HttpResponseStatus responseStatus = response.status();
         if (!is2xxSuccessful(responseStatus)) {
-            String message = String.format("unexpected response (responseStatus=%s)", responseStatus);
-            throw new RuntimeException(message);
+            if (config.isFailedResponsePayloadExposed()) {
+                return responsePayloadByteBufMono
+                        .asByteArray()
+                        .flatMap(responsePayloadBytes -> {
+                            String responsePayload = new String(responsePayloadBytes, StandardCharsets.UTF_8);
+                            String message = String.format(
+                                    "unexpected response (responseStatus=%s, responsePayload=%s)",
+                                    responseStatus, responsePayload);
+                            RuntimeException error = new RuntimeException(message);
+                            return Mono.error(error);
+                        });
+            } else {
+                String message = String.format("unexpected response (responseStatus=%s)", responseStatus);
+                RuntimeException error = new RuntimeException(message);
+                return Mono.error(error);
+            }
         }
 
         // Deserialize the response payload.

@@ -36,6 +36,8 @@ public class PubsubClientConfig {
 
     public static final PubsubClientConfig DEFAULT = builder().build();
 
+    public static final boolean DEFAULT_FAILED_RESPONSE_PAYLOAD_EXPOSED = true;
+
     private final String baseUrl;
 
     private final Duration pullTimeout;
@@ -47,12 +49,15 @@ public class PubsubClientConfig {
     @Nullable
     private final String userAgent;
 
+    private final boolean failedResponsePayloadExposed;
+
     private PubsubClientConfig(Builder builder) {
         this.baseUrl = builder.baseUrl;
         this.pullTimeout = builder.pullTimeout;
         this.publishTimeout = builder.publishTimeout;
         this.ackTimeout = builder.ackTimeout;
         this.userAgent = builder.userAgent;
+        this.failedResponsePayloadExposed = builder.failedResponsePayloadExposed;
     }
 
     public String getBaseUrl() {
@@ -76,6 +81,10 @@ public class PubsubClientConfig {
         return userAgent;
     }
 
+    public boolean isFailedResponsePayloadExposed() {
+        return failedResponsePayloadExposed;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -92,6 +101,9 @@ public class PubsubClientConfig {
 
         @Nullable
         private String userAgent = DEFAULT_USER_AGENT;
+
+        private boolean failedResponsePayloadExposed =
+                DEFAULT_FAILED_RESPONSE_PAYLOAD_EXPOSED;
 
         private Builder() {}
 
@@ -126,6 +138,12 @@ public class PubsubClientConfig {
             return this;
         }
 
+        public Builder setFailedResponsePayloadExposed(
+                boolean failedResponsePayloadExposed) {
+            this.failedResponsePayloadExposed = failedResponsePayloadExposed;
+            return this;
+        }
+
         public PubsubClientConfig build() {
             return new PubsubClientConfig(this);
         }
@@ -141,7 +159,8 @@ public class PubsubClientConfig {
                 pullTimeout.equals(that.pullTimeout) &&
                 publishTimeout.equals(that.publishTimeout) &&
                 ackTimeout.equals(that.ackTimeout) &&
-                Objects.equals(userAgent, that.userAgent);
+                Objects.equals(userAgent, that.userAgent) &&
+                failedResponsePayloadExposed == that.failedResponsePayloadExposed;
     }
 
     @Override
@@ -151,7 +170,8 @@ public class PubsubClientConfig {
                 pullTimeout,
                 publishTimeout,
                 ackTimeout,
-                userAgent);
+                userAgent,
+                failedResponsePayloadExposed);
     }
 
 }

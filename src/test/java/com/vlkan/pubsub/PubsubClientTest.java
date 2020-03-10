@@ -33,6 +33,7 @@ import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.prometheus.client.CollectorRegistry;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
@@ -318,6 +319,64 @@ public class PubsubClientTest {
                         PULL_REQUEST)
                 .block(Duration.ofSeconds(1));
         Assertions.assertThat(pullResponse).isEqualTo(PULL_RESPONSE);
+
+    }
+
+    @Test
+    public void test_failedResponsePayloadExposed() {
+
+        // Stub the publish response.
+        HttpResponseStatus publishResponseStatus = HttpResponseStatus.BAD_REQUEST;
+        String publishResponseJson = "{\"message\": \"sorry\"}";
+        serverMockRule.addStubMapping(
+                WireMock.stubFor(WireMock
+                        .post(WireMock.urlEqualTo(PUBLISH_REQUEST_RELATIVE_PATH))
+                        .willReturn(WireMock
+                                .aResponse()
+                                .withHeader(
+                                        HttpHeaderNames.CONTENT_TYPE.toString(),
+                                        HttpHeaderValues.APPLICATION_JSON.toString())
+                                .withStatus(publishResponseStatus.code())
+                                .withBody(publishResponseJson))));
+
+        for (boolean failedResponsePayloadExposed : new boolean[]{true, false}) {
+
+            // Create the Pub/Sub client.
+            PubsubClientConfig clientConfig = PubsubClientConfig
+                    .builder()
+                    .setBaseUrl(serverMockRule.baseUrl())
+                    .setFailedResponsePayloadExposed(failedResponsePayloadExposed)
+                    .build();
+            PubsubAccessTokenCache accessTokenCache = PubsubAccessTokenCacheFixture.getInstance();
+            PubsubClient client = PubsubClient
+                    .builder()
+                    .setConfig(clientConfig)
+                    .setAccessTokenCache(accessTokenCache)
+                    .build();
+
+            // Determine the expected message.
+            String expectedMessage;
+            if (failedResponsePayloadExposed) {
+                expectedMessage = String.format(
+                        "unexpected response (responseStatus=%s, responsePayload=%s)",
+                        publishResponseStatus, publishResponseJson);
+            } else {
+                expectedMessage = String.format(
+                        "unexpected response (responseStatus=%s)",
+                        publishResponseStatus);
+            }
+
+            // Verify the exception.
+            Assertions
+                    .assertThatThrownBy(() -> client
+                            .publish(PROJECT_NAME,
+                                    TOPIC_NAME,
+                                    PUBLISH_REQUEST)
+                            .block(Duration.ofSeconds(1)))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage(expectedMessage);
+
+        }
 
     }
 
