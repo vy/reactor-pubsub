@@ -65,19 +65,18 @@
         <java.version>1.8</java.version>
 
         <!-- library versions -->
-        <assertj-core.version>3.14.0</assertj-core.version>
+        <assertj-core.version>3.15.0</assertj-core.version>
         <jackson.version>[2.10.1,)</jackson.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.version>[4.13-beta-3,)</junit.version>
-        <google-auth-library-oauth2-http.version>0.18.0</google-auth-library-oauth2-http.version>
+        <google-auth-library-oauth2-http.version>0.20.0</google-auth-library-oauth2-http.version>
         <log4j.version>[2.12.1,)</log4j.version>
-        <micrometer.version>1.3.2</micrometer.version>
-        <micrometer-registry-prometheus.version>1.3.2</micrometer-registry-prometheus.version>
-        <mockito.version>3.2.0</mockito.version>
-        <reactor-core.version>3.3.1.RELEASE</reactor-core.version>
-        <reactor-netty.version>0.9.3.RELEASE</reactor-netty.version>
-        <slf4j.version>1.7.29</slf4j.version>
-        <wiremock.version>2.25.1</wiremock.version>
+        <micrometer.version>1.3.5</micrometer.version>
+        <mockito.version>3.3.0</mockito.version>
+        <reactor-core.version>3.3.3.RELEASE</reactor-core.version>
+        <reactor-netty.version>0.9.5.RELEASE</reactor-netty.version>
+        <slf4j.version>1.7.30</slf4j.version>
+        <wiremock.version>2.26.3</wiremock.version>
 
         <!-- plugin versions -->
         <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
@@ -87,6 +86,7 @@
         <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
 
     </properties>
 
@@ -198,7 +198,7 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-            <version>${micrometer-registry-prometheus.version}</version>
+            <version>${micrometer.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -261,6 +261,15 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+                <configuration>
+                    <rulesUri>${project.baseUri}/maven-version-rules.xml</rulesUri>
+                </configuration>
             </plugin>
 
         </plugins>
