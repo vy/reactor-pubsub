@@ -1,3 +1,11 @@
+== (2020-03-10) v0.2.1
+
+- Expose response body on failures. (#23)
+
+- Upgrade dependencies.
+
+- Add Maven wrapper.
+
 == (2020-01-16) v0.2.0
 
 - Add `PubsubPullerConfig#pullConcurrency` back.
