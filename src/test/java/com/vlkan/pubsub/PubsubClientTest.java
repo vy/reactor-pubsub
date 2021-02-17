@@ -101,39 +101,6 @@ public class PubsubClientTest {
                     new CollectorRegistry(),
                     Clock.SYSTEM);
 
-    private static final String PROMETHEUS_TAG_DISCREPANCY_ERROR_MESSAGE =
-            "Prometheus requires that all meters with the same name have the same set of tag keys.";
-
-    @Test
-    public void test_prometheus_error_on_tag_discrepancy_1() {
-        String meterName = "test_prometheus_error_on_tag_discrepancy_1";
-        PROMETHEUS_METER_REGISTRY.counter(meterName, "k1", "v1");
-        Assertions
-                .assertThatThrownBy(() -> PROMETHEUS_METER_REGISTRY.counter(meterName))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(PROMETHEUS_TAG_DISCREPANCY_ERROR_MESSAGE);
-    }
-
-    @Test
-    public void test_prometheus_error_on_tag_discrepancy_2() {
-        String meterName = "test_prometheus_error_on_tag_discrepancy_2";
-        PROMETHEUS_METER_REGISTRY.counter(meterName);
-        Assertions
-                .assertThatThrownBy(() -> PROMETHEUS_METER_REGISTRY.counter(meterName, "k1", "v1"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(PROMETHEUS_TAG_DISCREPANCY_ERROR_MESSAGE);
-    }
-
-    @Test
-    public void test_prometheus_error_on_tag_discrepancy_3() {
-        String meterName = "test_prometheus_error_on_tag_discrepancy_3";
-        PROMETHEUS_METER_REGISTRY.counter(meterName, "k1", "v1");
-        Assertions
-                .assertThatThrownBy(() -> PROMETHEUS_METER_REGISTRY.counter(meterName, "k2", "v2"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining(PROMETHEUS_TAG_DISCREPANCY_ERROR_MESSAGE);
-    }
-
     @Test
     public void test_metrics_against_prometheus() {
 
