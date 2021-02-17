@@ -584,9 +584,10 @@ configure and use the god damn rate limiter.
 
 == Contributors
 
+- https://github.com/akoshterek[Alex Koshterek]
 - https://github.com/berkaybuharali[Berkay Buharalı]
-- https://github.com/bsideup[Sergei Egorov]
 - https://github.com/luiccn[Luiz Neto]
+- https://github.com/bsideup[Sergei Egorov]
 
 == License
 
