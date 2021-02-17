@@ -1,3 +1,7 @@
+== (2021-02-17) v0.2.2
+
+- Upgrade dependencies. (#25)
+
 == (2020-03-10) v0.2.1
 
 - Expose response body on failures. (#23)
