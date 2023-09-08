@@ -76,7 +76,7 @@
         <reactor-core.version>3.4.3</reactor-core.version>
         <reactor-netty.version>1.0.4</reactor-netty.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <wiremock.version>2.27.2</wiremock.version>
+        <wiremock.version>2.35.1</wiremock.version>
 
         <!-- plugin versions -->
         <build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
