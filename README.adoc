@@ -582,6 +582,12 @@ my opinion you should not relentlessly burn Pub/Sub bills if the rest of the
 application is shouting out there is something going on wrong. Hence, please
 configure and use the god damn rate limiter.
 
+== Security policy
+
+If you have encountered an unlisted security vulnerability or other unexpected
+behaviour that has security impact, please report them privately to the
+mailto:volkan@yazi.ci[volkan@yazi.ci] email address.
+
 == Contributors
 
 - https://github.com/akoshterek[Alex Koshterek]
